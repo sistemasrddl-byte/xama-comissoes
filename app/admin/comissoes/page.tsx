@@ -1049,7 +1049,7 @@ export default function ComissoesPage() {
                     event.target.value
                   )
                 }
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm outline-none focus:border-[#f97316] focus:ring-4 focus:ring-orange-500/10"
+                className="input-month-clean h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm outline-none focus:border-[#f97316] focus:ring-4 focus:ring-orange-500/10"
               />
             </div>
           </div>

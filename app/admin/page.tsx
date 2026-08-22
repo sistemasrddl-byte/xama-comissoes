@@ -848,8 +848,7 @@ export default function AdminPage() {
             compromissos e exposição financeira.
           </p>
         </div>
-
-        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-2 py-2 shadow-sm">
+<div className="mx-auto flex w-fit max-w-full items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-2 py-1.5 shadow-sm">
   <button
     type="button"
     onClick={() =>
@@ -866,15 +865,15 @@ export default function AdminPage() {
     <ChevronLeft size={17} />
   </button>
 
-  <div className="min-w-[125px] text-center">
-    <p className="text-[9px] font-medium uppercase tracking-wide text-slate-400">
-      Competência
-    </p>
+ <div className="w-auto min-w-[110px] text-center">
+  <p className="text-[8px] font-medium uppercase tracking-wide text-slate-400">
+    Competência
+  </p>
 
-    <p className="mt-0.5 text-sm font-semibold capitalize text-slate-800">
-      {competenciaLabel}
-    </p>
-  </div>
+  <p className="mt-0.5 whitespace-nowrap text-sm font-semibold capitalize text-slate-800">
+    {competenciaLabel}
+  </p>
+</div>
 
   <button
     type="button"

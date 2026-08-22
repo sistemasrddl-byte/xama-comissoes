@@ -329,3 +329,23 @@ html.dark {
   scrollbar-color: #475569 #0f172a;
 }
 
+/* Campos de competência - comportamento consistente no iPhone/Safari */
+.input-month-clean {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Remove o indicador nativo do Safari/WebKit */
+.input-month-clean::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Remove estilos nativos adicionais */
+.input-month-clean::-webkit-inner-spin-button {
+  display: none;
+}

@@ -105,7 +105,7 @@ export default function AdminSidebar({
         </div>
 
         {/* Navegação */}
-        <nav className="flex-1 space-y-1 px-3">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 pb-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -142,7 +142,7 @@ export default function AdminSidebar({
         </nav>
 
         {/* Rodapé */}
-        <div className="shrink-0 border-t border-slate-100 p-4 dark:border-slate-800">
+        <div className="shrink-0 border-t border-slate-100 px-4 pt-4 pb-5 dark:border-slate-800">
           <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3 dark:bg-slate-900">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-[#ea580c] dark:bg-orange-950/60 dark:text-orange-300">
               A
@@ -150,7 +150,7 @@ export default function AdminSidebar({
 
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
-                XAMA Comissões
+                XAMA Comissões - 1.0
               </p>
 
               <p className="mt-0.5 truncate text-[10px] text-slate-400">
@@ -253,7 +253,7 @@ export default function AdminSidebar({
 
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
-                    XAMA Comissões
+                    XAMA Comissões - 1.0
                   </p>
 
                   <p className="mt-0.5 truncate text-[10px] text-slate-400">

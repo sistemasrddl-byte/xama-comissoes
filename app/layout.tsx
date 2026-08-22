@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -15,12 +15,50 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "XAMA Comissões",
   description: "Sistema de gestão de comissões",
+
+  manifest: "/manifest.webmanifest",
+
+  icons: {
+    icon: [
+      {
+        url: "/icons/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/icons/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: "/icons/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
+
+  appleWebApp: {
+    capable: true,
+    title: "XAMA",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#f97316",
 };
 
 const themeScript = `
 (function () {
   try {
     var tema = localStorage.getItem("xama-tema");
+
     if (tema === "escuro") {
       document.documentElement.classList.add("dark");
     } else {
@@ -48,6 +86,7 @@ export default function RootLayout({
           }}
         />
       </head>
+
       <body className="min-h-full flex flex-col">
         {children}
       </body>
