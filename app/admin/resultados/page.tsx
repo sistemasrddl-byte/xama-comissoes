@@ -88,7 +88,8 @@ export default function ResultadosPage() {
 
       const mesmoColaborador =
         colaboradorFiltro === "todos" ||
-        resultado.colaboradorId === colaboradorFiltro;
+        resultado.colaboradorId ===
+          colaboradorFiltro;
 
       const mesmaBusca =
         !termo ||
@@ -115,19 +116,8 @@ export default function ResultadosPage() {
         acc.clientes +=
           resultado.quantidadeClientes || 0;
 
-        acc.renovados +=
-          resultado.renovados || 0;
-
-        acc.retorno +=
-          resultado.retorno || 0;
-
-        acc.novos += resultado.novos || 0;
-
-        acc.evasao +=
-          resultado.evasao || 0;
-
-        acc.producao +=
-          resultado.producaoFinsol || 0;
+        acc.produtividade +=
+          resultado.produtividade || 0;
 
         acc.seguroFinsol +=
           resultado.seguroFinsol || 0;
@@ -138,26 +128,18 @@ export default function ResultadosPage() {
         acc.reembolso +=
           resultado.previsaoReembolso || 0;
 
-        acc.propostas +=
-          resultado.propostaFormalizada || 0;
-
-        acc.seguros +=
-          resultado.segurosVendidos || 0;
+        acc.seguroPrestamista +=
+          resultado.seguroPrestamista || 0;
 
         return acc;
       },
       {
         clientes: 0,
-        renovados: 0,
-        retorno: 0,
-        novos: 0,
-        evasao: 0,
-        producao: 0,
+        produtividade: 0,
         seguroFinsol: 0,
         seguroAssistencia: 0,
         reembolso: 0,
-        propostas: 0,
-        seguros: 0,
+        seguroPrestamista: 0,
       }
     );
   }, [resultadosFiltrados]);
@@ -168,7 +150,8 @@ export default function ResultadosPage() {
     return (
       colaboradores.find(
         (colaborador) => colaborador.id === id
-      )?.nome || "Colaborador não encontrado"
+      )?.nome ||
+      "Colaborador não encontrado"
     );
   }
 
@@ -298,11 +281,13 @@ export default function ResultadosPage() {
           </div>
 
           <p className="mt-4 text-xs text-slate-400">
-            Produção Finsol
+            PRODUTIVIDADE
           </p>
 
           <p className="mt-1 text-xl font-bold text-slate-900">
-            {formatarMoeda(resumo.producao)}
+            {formatarMoeda(
+              resumo.produtividade
+            )}
           </p>
         </div>
 
@@ -312,7 +297,7 @@ export default function ResultadosPage() {
           </div>
 
           <p className="mt-4 text-xs text-slate-400">
-            Clientes
+            Nº CLIENTES
           </p>
 
           <p className="mt-1 text-xl font-bold text-slate-900">
@@ -326,11 +311,11 @@ export default function ResultadosPage() {
           </div>
 
           <p className="mt-4 text-xs text-slate-400">
-            Seguros vendidos
+            SEGURO PRESTAMISTA
           </p>
 
           <p className="mt-1 text-xl font-bold text-slate-900">
-            {resumo.seguros}
+            {resumo.seguroPrestamista}
           </p>
         </div>
 
@@ -340,81 +325,16 @@ export default function ResultadosPage() {
           </div>
 
           <p className="mt-4 text-xs text-slate-400">
-            Previsão de reembolso
+            PREVISÃO DE REEMBOLSO
           </p>
 
           <p className="mt-1 text-xl font-bold text-slate-900">
-            {formatarMoeda(resumo.reembolso)}
+            {formatarMoeda(
+              resumo.reembolso
+            )}
           </p>
         </div>
       </div>
-
-      {/* Indicadores secundários */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          <div>
-            <p className="text-xs text-slate-400">
-              Renovados
-            </p>
-
-            <p className="mt-1 text-lg font-bold text-slate-800">
-              {resumo.renovados}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-slate-400">
-              Retorno
-            </p>
-
-            <p className="mt-1 text-lg font-bold text-slate-800">
-              {resumo.retorno}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-slate-400">
-              Novos
-            </p>
-
-            <p className="mt-1 text-lg font-bold text-slate-800">
-              {resumo.novos}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-slate-400">
-              Evasão
-            </p>
-
-            <p className="mt-1 text-lg font-bold text-slate-800">
-              {resumo.evasao}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-slate-400">
-              Propostas
-            </p>
-
-            <p className="mt-1 text-lg font-bold text-slate-800">
-              {resumo.propostas}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-slate-400">
-              Seg. Finsol
-            </p>
-
-            <p className="mt-1 text-lg font-bold text-slate-800">
-              {formatarMoeda(
-                resumo.seguroFinsol
-              )}
-            </p>
-          </div>
-        </div>
-      </section>
 
       {/* Lista */}
       <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -477,15 +397,23 @@ export default function ResultadosPage() {
                     </th>
 
                     <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
-                      Clientes
+                      Nº clientes
                     </th>
 
                     <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
-                      Produção
+                      Produtividade
                     </th>
 
                     <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
-                      Seguros
+                      Seguro Finsol
+                    </th>
+
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                      Assistência
+                    </th>
+
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                      Prestamista
                     </th>
 
                     <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
@@ -500,11 +428,20 @@ export default function ResultadosPage() {
                       <tr
                         key={resultado.id}
                         onClick={() =>
-                          abrirResultado(
-                            resultado.id
-                          )
+                          abrirResultado(resultado.id)
                         }
-                        className="cursor-pointer border-b border-slate-100 transition-colors hover:bg-orange-50/40 last:border-0"
+                        onKeyDown={(event) => {
+                          if (
+                            event.key === "Enter" ||
+                            event.key === " "
+                          ) {
+                            event.preventDefault();
+                            abrirResultado(resultado.id);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        className="cursor-pointer border-b border-slate-100 transition-colors hover:bg-orange-50/40 focus:bg-orange-50/40 focus:outline-none last:border-0"
                       >
                         <td className="px-5 py-4">
                           <p className="text-sm font-semibold text-slate-800">
@@ -533,12 +470,22 @@ export default function ResultadosPage() {
 
                         <td className="px-5 py-4 text-sm font-semibold text-slate-700">
                           {formatarMoeda(
-                            resultado.producaoFinsol
+                            resultado.produtividade
                           )}
                         </td>
 
                         <td className="px-5 py-4 text-sm text-slate-600">
-                          {resultado.segurosVendidos}
+                          {formatarMoeda(
+                            resultado.seguroFinsol
+                          )}
+                        </td>
+
+                        <td className="px-5 py-4 text-sm text-slate-600">
+                          {resultado.seguroAssistencia}
+                        </td>
+
+                        <td className="px-5 py-4 text-sm text-slate-600">
+                          {resultado.seguroPrestamista}
                         </td>
 
                         <td className="px-5 py-4">
@@ -570,15 +517,11 @@ export default function ResultadosPage() {
             <div className="divide-y divide-slate-100 md:hidden">
               {resultadosFiltrados.map(
                 (resultado) => (
-                  <div
-                    key={resultado.id}
-                    onClick={() =>
-                      abrirResultado(
-                        resultado.id
-                      )
-                    }
-                    className="cursor-pointer p-4 transition-colors active:bg-orange-50/60"
-                  >
+                  <Link
+                  key={resultado.id}
+                  href={`/admin/resultados/${resultado.id}`}
+                  className="block cursor-pointer p-4 transition-colors active:bg-orange-50/60"
+                >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-xs font-semibold text-[#f97316]">
@@ -626,7 +569,7 @@ export default function ResultadosPage() {
 
                       <div>
                         <p className="text-[11px] text-slate-400">
-                          Clientes
+                          Nº clientes
                         </p>
 
                         <p className="mt-1 text-xs font-medium text-slate-700">
@@ -636,27 +579,49 @@ export default function ResultadosPage() {
 
                       <div>
                         <p className="text-[11px] text-slate-400">
-                          Produção
+                          Produtividade
                         </p>
 
                         <p className="mt-1 text-xs font-semibold text-slate-800">
                           {formatarMoeda(
-                            resultado.producaoFinsol
+                            resultado.produtividade
                           )}
                         </p>
                       </div>
 
                       <div>
                         <p className="text-[11px] text-slate-400">
-                          Seguros
+                          Seguro Finsol
                         </p>
 
                         <p className="mt-1 text-xs font-semibold text-slate-800">
-                          {resultado.segurosVendidos}
+                          {formatarMoeda(
+                            resultado.seguroFinsol
+                          )}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-[11px] text-slate-400">
+                          Assistência
+                        </p>
+
+                        <p className="mt-1 text-xs font-semibold text-slate-800">
+                          {resultado.seguroAssistencia}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-[11px] text-slate-400">
+                          Prestamista
+                        </p>
+
+                        <p className="mt-1 text-xs font-semibold text-slate-800">
+                          {resultado.seguroPrestamista}
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 )
               )}
             </div>

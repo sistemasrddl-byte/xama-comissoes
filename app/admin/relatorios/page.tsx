@@ -59,7 +59,7 @@ function calcularComissao(
   regras: RegrasComissao
 ) {
   const comissaoLiberacao =
-    (resultado.producaoFinsol || 0) *
+    (resultado.produtividade || 0) *
     (regras.liberacaoPercentual / 100);
 
   const bonificacaoLiberacao =
@@ -70,12 +70,20 @@ function calcularComissao(
     (resultado.previsaoReembolso || 0) *
     (regras.reembolsoPercentual / 100);
 
-  const comissaoSeguro =
+  const comissaoSeguroFinsol =
     (resultado.seguroFinsol || 0) *
     (regras.seguroPercentual / 100);
 
+  const comissaoSeguroPrestamista =
+    (resultado.seguroPrestamista || 0) *
+    (regras.seguroPercentual / 100);
+
+  const comissaoSeguro =
+    comissaoSeguroFinsol +
+    comissaoSeguroPrestamista;
+
   const comissaoAssistencia =
-    (resultado.quantidadeClientes || 0) *
+    (resultado.seguroAssistencia || 0) *
     regras.assistenciaValorPorCliente;
 
   const totalComissao =
@@ -404,11 +412,11 @@ export default function RelatoriosPage() {
             ? resultadosDaLinha.reduce(
                 (total, resultado) =>
                   total +
-                  (resultado.producaoFinsol ||
+                  (resultado.produtividade ||
                     0),
                 0
               )
-            : fechamento.producaoFinsol;
+            : fechamento.produtividade;
 
         const calculos =
           resultadosDaLinha.map(
@@ -549,7 +557,7 @@ export default function RelatoriosPage() {
             colaborador.nome,
           resultados: [resultado],
           producao:
-            resultado.producaoFinsol || 0,
+            resultado.produtividade || 0,
           comissao:
             calculo.totalComissao,
           bonificacao:
@@ -1009,7 +1017,7 @@ export default function RelatoriosPage() {
         row++;
 
         const dados = [
-          ["Produção", resumo.producao],
+          ["Produtividade", resumo.producao],
           ["Comissões", resumo.comissao],
           ["Bonificações", resumo.bonificacao],
           ["Total a pagar", resumo.totalPagar],
@@ -1059,7 +1067,7 @@ export default function RelatoriosPage() {
         ];
       } else if (tipoRelatorio === "colaboradores") {
         sheet.addRow([
-          "Colaborador", "Produção", "Comissão",
+          "Colaborador", "Produtividade", "Comissão",
           "Bonificação", "Total a pagar", "Situação",
         ]);
         styleHeader(row, 6);
@@ -1085,32 +1093,36 @@ export default function RelatoriosPage() {
         ];
       } else if (tipoRelatorio === "lancamentos") {
         sheet.addRow([
-          "Colaborador", "Resultado", "Competência",
-          "Clientes", "Produção", "Seguros", "Situação",
+          "Colaborador", "Cliente / Grupo", "Competência",
+          "Clientes", "Produtividade", "Seguro Finsol",
+          "Prestamista", "Assistência", "Situação",
         ]);
-        styleHeader(row, 7);
+        styleHeader(row, 9);
         row++;
 
         for (const linha of linhasFiltradas) {
           for (const resultado of linha.resultados) {
             sheet.addRow([
               linha.colaboradorNome,
-              resultado.id ? resultado.id.slice(-8) : "—",
+              resultado.nomeCliente || "—",
               resultado.competencia,
               resultado.quantidadeClientes,
-              resultado.producaoFinsol || 0,
+              resultado.produtividade || 0,
               resultado.seguroFinsol || 0,
+              resultado.seguroPrestamista || 0,
+              resultado.seguroAssistencia || 0,
               linha.situacao,
             ]);
-            styleData(row, 7);
-            moneyColumns(row, [5]);
+            styleData(row, 9);
+            moneyColumns(row, [5, 6, 7]);
             row++;
           }
         }
 
         sheet.columns = [
           { width: 30 }, { width: 18 }, { width: 18 },
-          { width: 12 }, { width: 18 }, { width: 14 }, { width: 16 },
+          { width: 12 }, { width: 18 }, { width: 18 },
+          { width: 16 }, { width: 14 }, { width: 16 },
         ];
       } else if (tipoRelatorio === "pagamentos") {
         sheet.addRow([
@@ -1419,7 +1431,7 @@ export default function RelatoriosPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <ResumoCard
           icon={<BarChart3 size={19} />}
-          label="Produção"
+          label="Produtividade"
           valor={formatarMoeda(
             resumo.producao
           )}
@@ -1600,7 +1612,7 @@ export default function RelatoriosPage() {
                     Colaborador
                   </th>
                   <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
-                    Produção
+                    Produtividade
                   </th>
                   <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
                     Comissão
@@ -1707,14 +1719,14 @@ export default function RelatoriosPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-left">
+            <table className="w-full min-w-[1250px] text-left">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/70">
                   <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
                     Colaborador
                   </th>
                   <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
-                    Resultado
+                    Cliente / Grupo
                   </th>
                   <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
                     Competência
@@ -1723,10 +1735,16 @@ export default function RelatoriosPage() {
                     Clientes
                   </th>
                   <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
-                    Produção
+                    Produtividade
                   </th>
                   <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
-                    Seguros
+                    Seguro Finsol
+                  </th>
+                  <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
+                    Prestamista
+                  </th>
+                  <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
+                    Assistência
                   </th>
                   <th className="px-5 py-3 text-[11px] font-semibold text-slate-500">
                     Situação
@@ -1749,12 +1767,9 @@ export default function RelatoriosPage() {
                             }
                           </td>
 
-                          <td className="px-5 py-4 text-sm text-slate-600">
-                    Resultado{" "}
-                    {resultado.id
-                      ? resultado.id.slice(-8)
-                      : "—"}
-                  </td>
+                          <td className="px-5 py-4 text-sm font-medium text-slate-700">
+                            {resultado.nomeCliente || "—"}
+                          </td>
 
                   <td className="px-5 py-4 text-xs text-slate-500">
                     {resultado.competencia}
@@ -1768,15 +1783,25 @@ export default function RelatoriosPage() {
 
                           <td className="px-5 py-4 text-sm font-semibold text-slate-900">
                             {formatarMoeda(
-                              resultado.producaoFinsol ||
+                              resultado.produtividade ||
                                 0
                             )}
                           </td>
 
                           <td className="px-5 py-4 text-sm text-slate-700">
-                            {
-                              resultado.seguroFinsol
-                            }
+                            {formatarMoeda(
+                              resultado.seguroFinsol || 0
+                            )}
+                          </td>
+
+                          <td className="px-5 py-4 text-sm text-slate-700">
+                            {formatarMoeda(
+                              resultado.seguroPrestamista || 0
+                            )}
+                          </td>
+
+                          <td className="px-5 py-4 text-sm text-slate-700">
+                            {resultado.seguroAssistencia ?? 0}
                           </td>
 
                           <td className="px-5 py-4">
@@ -2125,7 +2150,7 @@ export default function RelatoriosPage() {
                   <>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       <div className="rounded-lg bg-slate-50 p-3">
-                        <p className="text-[10px] text-slate-400">Produção</p>
+                        <p className="text-[10px] text-slate-400">Produtividade</p>
                         <p className="mt-1 text-sm font-bold text-slate-900">
                           {formatarMoeda(resumo.producao)}
                         </p>
@@ -2184,7 +2209,7 @@ export default function RelatoriosPage() {
                     <table className="w-full table-fixed text-left">
                       <thead>
                         <tr className="border-b border-slate-200 bg-slate-50">
-                          {["Colaborador", "Produção", "Comissão", "Bonificação", "Total", "Situação"].map((titulo) => (
+                          {["Colaborador", "Produtividade", "Comissão", "Bonificação", "Total", "Situação"].map((titulo) => (
                             <th key={titulo} className="px-2 py-2 text-[9px] font-semibold break-words text-slate-500">
                               {titulo}
                             </th>
@@ -2215,7 +2240,7 @@ export default function RelatoriosPage() {
                     <table className="w-full table-fixed text-left">
                       <thead>
                         <tr className="border-b border-slate-200 bg-slate-50">
-                          {["Colaborador", "Resultado", "Competência", "Clientes", "Produção", "Seguros", "Situação"].map((titulo) => (
+                          {["Colaborador", "Cliente / Grupo", "Competência", "Clientes", "Produtividade", "Seguro Finsol", "Prestamista", "Assistência", "Situação"].map((titulo) => (
                             <th key={titulo} className="px-2 py-2 text-[9px] font-semibold break-words text-slate-500">{titulo}</th>
                           ))}
                         </tr>
@@ -2225,11 +2250,13 @@ export default function RelatoriosPage() {
                           linha.resultados.map((resultado) => (
                             <tr key={`previa-lanc-${linha.id}-${resultado.id}`} className="border-b border-slate-100 last:border-0">
                               <td className="px-2 py-2 text-[9px] font-semibold break-words">{linha.colaboradorNome}</td>
-                              <td className="px-2 py-2 text-[8px] break-all text-slate-600">{resultado.id}</td>
+                              <td className="px-2 py-2 text-[9px] break-words text-slate-700">{resultado.nomeCliente || "—"}</td>
                               <td className="px-2 py-2 text-[9px] break-words">{resultado.competencia}</td>
                               <td className="px-2 py-2 text-[9px] break-words">{resultado.quantidadeClientes ?? 0}</td>
-                              <td className="px-2 py-2 text-[9px] break-words">{formatarMoeda(resultado.producaoFinsol || 0)}</td>
-                              <td className="px-2 py-2 text-[9px] break-words">{resultado.seguroFinsol ?? 0}</td>
+                              <td className="px-2 py-2 text-[9px] break-words">{formatarMoeda(resultado.produtividade || 0)}</td>
+                              <td className="px-2 py-2 text-[9px] break-words">{formatarMoeda(resultado.seguroFinsol || 0)}</td>
+                              <td className="px-2 py-2 text-[9px] break-words">{formatarMoeda(resultado.seguroPrestamista || 0)}</td>
+                              <td className="px-2 py-2 text-[9px] break-words">{resultado.seguroAssistencia ?? 0}</td>
                               <td className="px-4 py-3"><SituacaoBadge situacao={linha.situacao} /></td>
                             </tr>
                           ))

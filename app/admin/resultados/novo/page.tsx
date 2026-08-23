@@ -76,44 +76,26 @@ export default function NovoResultadoPage() {
   const [dataDesembolso, setDataDesembolso] =
     useState("");
 
-  const [vencimento, setVencimento] =
-    useState("");
-
   const [nomeCliente, setNomeCliente] =
     useState("");
 
   const [quantidadeClientes, setQuantidadeClientes] =
     useState("1");
 
-  const [renovados, setRenovados] =
-    useState("0");
-
-  const [retorno, setRetorno] =
-    useState("0");
-
-  const [novos, setNovos] =
-    useState("0");
-
-  const [evasao, setEvasao] =
-    useState("0");
-
-  const [producaoFinsol, setProducaoFinsol] =
+  const [produtividade, setProdutividade] =
     useState("");
 
   const [seguroFinsol, setSeguroFinsol] =
     useState("");
 
   const [seguroAssistencia, setSeguroAssistencia] =
-    useState("");
+    useState("0");
 
   const [previsaoReembolso, setPrevisaoReembolso] =
     useState("");
 
-  const [propostaFormalizada, setPropostaFormalizada] =
-    useState("0");
-
-  const [segurosVendidos, setSegurosVendidos] =
-    useState("0");
+  const [seguroPrestamista, setSeguroPrestamista] =
+    useState("");
 
   const [observacoes, setObservacoes] =
     useState("");
@@ -170,42 +152,29 @@ export default function NovoResultadoPage() {
         situacao,
 
         dataDesembolso,
-        vencimento,
 
-        nomeCliente: nomeCliente.trim(),
+        nomeCliente:
+          nomeCliente.trim(),
 
         quantidadeClientes:
           numero(quantidadeClientes),
 
-        renovados: numero(renovados),
-
-        retorno: numero(retorno),
-
-        novos: numero(novos),
-
-        evasao: numero(evasao),
-
-        producaoFinsol:
-          converterMoeda(producaoFinsol),
+        produtividade:
+          converterMoeda(produtividade),
 
         seguroFinsol:
           converterMoeda(seguroFinsol),
 
         seguroAssistencia:
-          converterMoeda(
-            seguroAssistencia
-          ),
+          numero(seguroAssistencia),
 
         previsaoReembolso:
           converterMoeda(
             previsaoReembolso
           ),
 
-        propostaFormalizada:
-          numero(propostaFormalizada),
-
-        segurosVendidos:
-          numero(segurosVendidos),
+        seguroPrestamista:
+          converterMoeda(seguroPrestamista),
 
         observacoes:
           observacoes.trim(),
@@ -327,7 +296,7 @@ export default function NovoResultadoPage() {
                       event.target.value
                     )
                   }
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#f97316] focus:ring-4 focus:ring-orange-500/10"
+                  className="input-month-clean h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm outline-none focus:border-[#f97316] focus:ring-4 focus:ring-orange-500/10"
                 />
               </div>
             </div>
@@ -417,87 +386,15 @@ export default function NovoResultadoPage() {
               />
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Vencimento
-              </label>
-
-              <input
-                type="date"
-                value={vencimento}
-                onChange={(event) =>
-                  setVencimento(
-                    event.target.value
-                  )
-                }
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-[#f97316] focus:ring-4 focus:ring-orange-500/10"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Indicadores de clientes */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="mb-6">
-            <h2 className="font-semibold text-slate-900">
-              Indicadores de clientes
-            </h2>
-
-            <p className="mt-1 text-xs text-slate-400">
-              Quantidades utilizadas nos indicadores.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
             <CampoNumero
               label="Nº clientes"
               value={quantidadeClientes}
               setValue={setQuantidadeClientes}
             />
-
-            <CampoNumero
-              label="Renovados"
-              value={renovados}
-              setValue={setRenovados}
-            />
-
-            <CampoNumero
-              label="Retorno"
-              value={retorno}
-              setValue={setRetorno}
-            />
-
-            <CampoNumero
-              label="Novos"
-              value={novos}
-              setValue={setNovos}
-            />
-
-            <CampoNumero
-              label="Evasão"
-              value={evasao}
-              setValue={setEvasao}
-            />
-          </div>
-
-          <div className="mt-5 rounded-xl bg-orange-50 p-4">
-            <p className="text-xs font-medium text-orange-700">
-              Incremento de clientes
-            </p>
-
-            <p className="mt-1 text-lg font-bold text-orange-800">
-              {numero(retorno) +
-                numero(novos) -
-                numero(evasao)}
-            </p>
-
-            <p className="mt-1 text-[11px] text-orange-600">
-              Retorno + Novos − Evasão
-            </p>
           </div>
         </section>
 
-        {/* Produção */}
+        {/* Produção e seguros */}
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="mb-6">
             <h2 className="font-semibold text-slate-900">
@@ -505,15 +402,15 @@ export default function NovoResultadoPage() {
             </h2>
 
             <p className="mt-1 text-xs text-slate-400">
-              Valores financeiros da operação.
+              Valores e quantidades da operação.
             </p>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <CampoMoeda
-              label="Produção Finsol"
-              value={producaoFinsol}
-              setValue={setProducaoFinsol}
+              label="PRODUTIVIDADE"
+              value={produtividade}
+              setValue={setProdutividade}
               icon={<Target size={18} />}
             />
 
@@ -524,11 +421,10 @@ export default function NovoResultadoPage() {
               icon={<ShieldCheck size={18} />}
             />
 
-            <CampoMoeda
+            <CampoNumero
               label="Seguro assistência"
               value={seguroAssistencia}
               setValue={setSeguroAssistencia}
-              icon={<ShieldCheck size={18} />}
             />
 
             <CampoMoeda
@@ -538,17 +434,12 @@ export default function NovoResultadoPage() {
               icon={<Wallet size={18} />}
             />
 
-            <CampoNumero
-              label="Proposta formalizada"
-              value={propostaFormalizada}
-              setValue={setPropostaFormalizada}
-            />
-
-            <CampoNumero
-              label="Seguros vendidos"
-              value={segurosVendidos}
-              setValue={setSegurosVendidos}
-            />
+            <CampoMoeda
+  label="Seguro PRESTAMISTA"
+  value={seguroPrestamista}
+  setValue={setSeguroPrestamista}
+  icon={<ShieldCheck size={18} />}
+/>
           </div>
         </section>
 

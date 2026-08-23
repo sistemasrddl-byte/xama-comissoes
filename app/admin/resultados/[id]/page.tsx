@@ -8,14 +8,13 @@ import {
   CalendarDays,
   CheckCircle2,
   CircleDollarSign,
-  FileCheck2,
   Pencil,
   ShieldCheck,
-  Target,
   Trash2,
   UserRound,
   Users,
   Wallet,
+  Target,
 } from "lucide-react";
 
 import {
@@ -50,9 +49,7 @@ function formatarData(data: string) {
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
-function formatarCompetencia(
-  competencia: string
-) {
+function formatarCompetencia(competencia: string) {
   if (!competencia) return "—";
 
   const [ano, mes] = competencia.split("-");
@@ -74,11 +71,7 @@ function formatarCompetencia(
 
   const indice = Number(mes) - 1;
 
-  if (
-    !ano ||
-    indice < 0 ||
-    indice > 11
-  ) {
+  if (!ano || indice < 0 || indice > 11) {
     return competencia;
   }
 
@@ -151,6 +144,9 @@ export default function ResultadoDetalhesPage() {
     if (!id) return;
 
     let cancelado = false;
+    let unsubscribeColaborador:
+      | (() => void)
+      | undefined;
 
     async function carregarResultado() {
       try {
@@ -163,31 +159,26 @@ export default function ResultadoDetalhesPage() {
         if (cancelado) return;
 
         if (!resultadoEncontrado) {
-          setErro(
-            "Resultado não encontrado."
-          );
-
+          setErro("Resultado não encontrado.");
           setResultado(null);
           setCarregando(false);
-
           return;
         }
 
         setResultado(resultadoEncontrado);
 
-        if (
-          resultadoEncontrado.colaboradorId
-        ) {
-          observarColaborador(
-            resultadoEncontrado.colaboradorId,
-            (colaboradorEncontrado) => {
-              if (!cancelado) {
-                setColaborador(
-                  colaboradorEncontrado
-                );
+        if (resultadoEncontrado.colaboradorId) {
+          unsubscribeColaborador =
+            observarColaborador(
+              resultadoEncontrado.colaboradorId,
+              (colaboradorEncontrado) => {
+                if (!cancelado) {
+                  setColaborador(
+                    colaboradorEncontrado
+                  );
+                }
               }
-            }
-          );
+            );
         }
 
         setCarregando(false);
@@ -201,7 +192,6 @@ export default function ResultadoDetalhesPage() {
           setErro(
             "Não foi possível carregar o resultado."
           );
-
           setCarregando(false);
         }
       }
@@ -211,6 +201,7 @@ export default function ResultadoDetalhesPage() {
 
     return () => {
       cancelado = true;
+      unsubscribeColaborador?.();
     };
   }, [id]);
 
@@ -224,9 +215,7 @@ export default function ResultadoDetalhesPage() {
 
       setDialogAberto(false);
 
-      router.push(
-        "/admin/resultados"
-      );
+      router.push("/admin/resultados");
     } catch (error) {
       console.error(
         "Erro ao excluir resultado:",
@@ -269,8 +258,7 @@ export default function ResultadoDetalhesPage() {
 
         <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
           <p className="font-semibold text-red-700">
-            {erro ||
-              "Resultado não encontrado."}
+            {erro || "Resultado não encontrado."}
           </p>
 
           <Link
@@ -283,11 +271,6 @@ export default function ResultadoDetalhesPage() {
       </div>
     );
   }
-
-  const incremento =
-    resultado.retorno +
-    resultado.novos -
-    resultado.evasao;
 
   return (
     <>
@@ -334,9 +317,7 @@ export default function ResultadoDetalhesPage() {
 
             <button
               type="button"
-              onClick={() =>
-                setDialogAberto(true)
-              }
+              onClick={() => setDialogAberto(true)}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 text-sm font-semibold text-red-600 transition hover:bg-red-50"
             >
               <Trash2 size={16} />
@@ -348,28 +329,27 @@ export default function ResultadoDetalhesPage() {
           </div>
         </div>
 
-        {/* Mensagem de erro */}
         {erro && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {erro}
           </div>
         )}
 
-        {/* Resumo principal */}
+        {/* Operação */}
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-100 p-5 sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#f97316]">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-[#f97316]">
                   <UserRound size={22} />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs text-slate-400">
                     Colaborador
                   </p>
 
-                  <p className="font-semibold text-slate-900">
+                  <p className="truncate font-semibold text-slate-900">
                     {colaborador?.nome ||
                       "Colaborador"}
                   </p>
@@ -377,7 +357,7 @@ export default function ResultadoDetalhesPage() {
               </div>
 
               <span
-                className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${getSituacaoClasses(
+                className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${getSituacaoClasses(
                   resultado.situacao
                 )}`}
               >
@@ -395,6 +375,11 @@ export default function ResultadoDetalhesPage() {
 
           <div className="grid divide-y divide-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <InfoItem
+              label="Cliente / Grupo"
+              value={resultado.nomeCliente || "—"}
+            />
+
+            <InfoItem
               label="Data do desembolso"
               value={formatarData(
                 resultado.dataDesembolso
@@ -402,36 +387,27 @@ export default function ResultadoDetalhesPage() {
             />
 
             <InfoItem
-              label="Vencimento"
-              value={formatarData(
-                resultado.vencimento
-              )}
-            />
-
-            <InfoItem
-              label="Clientes"
+              label="Nº clientes"
               value={String(
-                resultado.quantidadeClientes
+                resultado.quantidadeClientes ?? 0
               )}
             />
           </div>
         </section>
 
-        {/* Produção */}
+        {/* Produtividade e seguros */}
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <SectionTitle
-            icon={
-              <CircleDollarSign size={18} />
-            }
-            title="Produção"
-            description="Valores financeiros registrados no resultado."
+            icon={<CircleDollarSign size={18} />}
+            title="Produtividade e seguros"
+            description="Valores e quantidades registrados no resultado."
           />
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <MetricCard
-              label="Produção Finsol"
+              label="PRODUTIVIDADE"
               value={formatarMoeda(
-                resultado.producaoFinsol
+                resultado.produtividade
               )}
               icon={<Target size={18} />}
               highlight
@@ -447,8 +423,8 @@ export default function ResultadoDetalhesPage() {
 
             <MetricCard
               label="Seguro assistência"
-              value={formatarMoeda(
-                resultado.seguroAssistencia
+              value={String(
+                resultado.seguroAssistencia ?? 0
               )}
               icon={<ShieldCheck size={18} />}
             />
@@ -460,86 +436,13 @@ export default function ResultadoDetalhesPage() {
               )}
               icon={<Wallet size={18} />}
             />
-          </div>
-        </section>
 
-        {/* Indicadores */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <SectionTitle
-            icon={<Users size={18} />}
-            title="Indicadores de clientes"
-            description="Resumo dos indicadores registrados."
-          />
-
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
-            <NumberMetric
-              label="Clientes"
-              value={
-                resultado.quantidadeClientes
-              }
-            />
-
-            <NumberMetric
-              label="Renovados"
-              value={resultado.renovados}
-            />
-
-            <NumberMetric
-              label="Retorno"
-              value={resultado.retorno}
-            />
-
-            <NumberMetric
-              label="Novos"
-              value={resultado.novos}
-            />
-
-            <NumberMetric
-              label="Evasão"
-              value={resultado.evasao}
-            />
-          </div>
-
-          <div className="mt-5 rounded-xl bg-orange-50 p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold text-orange-700">
-                  Incremento de clientes
-                </p>
-
-                <p className="mt-1 text-xs text-orange-600">
-                  Retorno + Novos − Evasão
-                </p>
-              </div>
-
-              <p className="text-xl font-bold text-orange-800">
-                {incremento}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Outros indicadores */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <SectionTitle
-            icon={<FileCheck2 size={18} />}
-            title="Outros indicadores"
-            description="Informações complementares da operação."
-          />
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <NumberMetric
-              label="Propostas formalizadas"
-              value={
-                resultado.propostaFormalizada
-              }
-            />
-
-            <NumberMetric
-              label="Seguros vendidos"
-              value={
-                resultado.segurosVendidos
-              }
+            <MetricCard
+              label="Seguro PRESTAMISTA"
+              value={String(
+                resultado.seguroPrestamista ?? 0
+              )}
+              icon={<ShieldCheck size={18} />}
             />
           </div>
         </section>
@@ -547,7 +450,7 @@ export default function ResultadoDetalhesPage() {
         {/* Observações */}
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <SectionTitle
-            icon={<FileCheck2 size={18} />}
+            icon={<FileTextIcon />}
             title="Observações"
             description="Informações adicionais do lançamento."
           />
@@ -565,7 +468,6 @@ export default function ResultadoDetalhesPage() {
           </div>
         </section>
 
-        {/* Rodapé */}
         <div className="pb-6 text-center text-xs text-slate-400">
           Resultado registrado em{" "}
           {resultado.criadoEm
@@ -576,7 +478,6 @@ export default function ResultadoDetalhesPage() {
         </div>
       </div>
 
-      {/* Dialog de confirmação */}
       <ConfirmDialog
         open={dialogAberto}
         title="Excluir resultado?"
@@ -601,8 +502,7 @@ export default function ResultadoDetalhesPage() {
           </p>
 
           <p className="mt-1 text-xs text-slate-500">
-            {colaborador?.nome ||
-              "Colaborador"}{" "}
+            {colaborador?.nome || "Colaborador"}{" "}
             •{" "}
             {formatarCompetencia(
               resultado.competencia
@@ -627,7 +527,7 @@ function InfoItem({
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-semibold text-slate-800">
+      <p className="mt-1 break-words text-sm font-semibold text-slate-800">
         {value}
       </p>
     </div>
@@ -704,22 +604,23 @@ function MetricCard({
   );
 }
 
-function NumberMetric({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
+function FileTextIcon() {
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-      <p className="text-xs text-slate-400">
-        {label}
-      </p>
-
-      <p className="mt-2 text-xl font-bold text-slate-900">
-        {value}
-      </p>
-    </div>
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v6h6" />
+      <path d="M8 13h8" />
+      <path d="M8 17h6" />
+    </svg>
   );
 }

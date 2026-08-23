@@ -6,10 +6,12 @@ import {
   CheckCircle2,
   Clock3,
   CircleDollarSign,
+  ShieldCheck,
   ChevronLeft,
   ChevronRight,
   FileText,
   LogOut,
+  Users,
   Wallet,
 } from "lucide-react";
 
@@ -82,7 +84,7 @@ function calcularComissao(
   regras: RegrasComissao
 ) {
   const comissaoLiberacao =
-    (resultado.producaoFinsol || 0) *
+    (resultado.produtividade || 0) *
     (regras.liberacaoPercentual / 100);
 
   const bonificacaoLiberacao =
@@ -93,9 +95,17 @@ function calcularComissao(
     (resultado.previsaoReembolso || 0) *
     (regras.reembolsoPercentual / 100);
 
-  const comissaoSeguro =
+  const comissaoSeguroFinsol =
     (resultado.seguroFinsol || 0) *
     (regras.seguroPercentual / 100);
+
+  const comissaoSeguroPrestamista =
+    (resultado.seguroPrestamista || 0) *
+    (regras.seguroPercentual / 100);
+
+  const comissaoSeguro =
+    comissaoSeguroFinsol +
+    comissaoSeguroPrestamista;
 
   const comissaoAssistencia =
     (resultado.quantidadeClientes || 0) *
@@ -110,6 +120,9 @@ function calcularComissao(
     
 
   return {
+    comissaoSeguroFinsol,
+    comissaoSeguroPrestamista,
+    comissaoSeguro,
     totalComissao,
     bonificacaoLiberacao,
     totalPagar:
@@ -408,7 +421,7 @@ cancelarFechamentosRef.current =
       resultadosDaCompetencia.forEach(
         (resultado) => {
           producao +=
-            resultado.producaoFinsol || 0;
+            resultado.produtividade || 0;
 
           const calculo =
             calcularComissao(
@@ -655,7 +668,7 @@ cancelarFechamentosRef.current =
               Olá, {nomeExibicao}
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Acompanhe sua produção, comissões e pagamentos.
+              Acompanhe sua produtividade, comissões e pagamentos.
             </p>
           </div>
 
@@ -702,42 +715,120 @@ cancelarFechamentosRef.current =
         </div>
       </div>
 
-      {/* Indicadores */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <ResumoCard
-          icon={<BarChart3 size={18} />}
-          label="Produção"
-          valor={formatarMoeda(resumo.producao)}
-          estilo="orange"
-        />
+      {/* Resultados da competência */}
+      <section>
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-slate-100">
+            Resultados da competência
+          </h2>
+          <p className="mt-1 text-[11px] text-slate-400">
+            Acompanhe sua produtividade e os resultados registrados no período.
+          </p>
+        </div>
 
-        <ResumoCard
-          icon={<CircleDollarSign size={18} />}
-          label="Comissões"
-          valor={formatarMoeda(resumo.comissao)}
-          estilo="blue"
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <ResumoCard
+            icon={<BarChart3 size={18} />}
+            label="Produtividade"
+            valor={formatarMoeda(resumo.producao)}
+            estilo="orange"
+          />
 
-        <ResumoCard
-          icon={<Wallet size={18} />}
-          label="Bonificações"
-          valor={formatarMoeda(resumo.bonificacao)}
-          estilo="green"
-        />
+          <ResumoCard
+            icon={<ShieldCheck size={18} />}
+            label="Seguro Finsol"
+            valor={formatarMoeda(
+              resultadosDaCompetencia.reduce(
+                (total, resultado) =>
+                  total + (resultado.seguroFinsol || 0),
+                0
+              )
+            )}
+            estilo="blue"
+          />
 
-        <ResumoCard
-          icon={<CircleDollarSign size={18} />}
-          label="Total a receber"
-          valor={formatarMoeda(resumo.totalPagar)}
-          estilo="purple"
-        />
-      </div>
+          <ResumoCard
+            icon={<ShieldCheck size={18} />}
+            label="Seguro PRESTAMISTA"
+            valor={formatarMoeda(
+              resultadosDaCompetencia.reduce(
+                (total, resultado) =>
+                  total + (resultado.seguroPrestamista || 0),
+                0
+              )
+            )}
+            estilo="purple"
+          />
+
+          <ResumoCard
+            icon={<Users size={18} />}
+            label="Assistências"
+            valor={String(
+              resultadosDaCompetencia.reduce(
+                (total, resultado) =>
+                  total + (resultado.seguroAssistencia || 0),
+                0
+              )
+            )}
+            estilo="green"
+          />
+        </div>
+      </section>
+
+      {/* Minha remuneração */}
+      <section className="mt-5">
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-slate-100">
+            Minha remuneração
+          </h2>
+          <p className="mt-1 text-[11px] text-slate-400">
+            Valores calculados de acordo com os resultados e as regras vigentes.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <ResumoCard
+            icon={<CircleDollarSign size={18} />}
+            label="Comissões"
+            valor={formatarMoeda(resumo.comissao)}
+            estilo="blue"
+          />
+
+          <ResumoCard
+            icon={<Wallet size={18} />}
+            label="Bonificações"
+            valor={formatarMoeda(resumo.bonificacao)}
+            estilo="green"
+          />
+
+          <div className="rounded-2xl border border-orange-400/30 bg-orange-500/10 p-4 shadow-sm sm:p-5">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/15 text-orange-400">
+                <CircleDollarSign size={18} />
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-300">
+                  Total a receber
+                </p>
+                <p className="mt-1 text-xl font-bold text-white sm:text-2xl">
+                  {formatarMoeda(resumo.totalPagar)}
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-3 text-[10px] text-slate-400">
+              Comissões + bonificações da competência.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Situação financeira */}
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="mt-3 rounded-2xl border border-slate-200 bg-white shadow-sm ">
         <div className="border-b border-slate-100 p-5">
           <h2 className="font-semibold text-slate-900">
-            Situação dos pagamentos
+            Situação da remuneração
           </h2>
 
           <p className="mt-1 text-xs text-slate-400">
@@ -773,7 +864,7 @@ cancelarFechamentosRef.current =
       </section>
 
       {/* Resultados */}
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-[#f97316]">
@@ -800,7 +891,7 @@ cancelarFechamentosRef.current =
             />
 
             <p className="mt-3 text-sm font-semibold text-slate-600">
-              Nenhum lançamento nesta competência
+              Nenhum resultado nesta competência
             </p>
 
             <p className="mt-1 text-xs text-slate-400">
@@ -809,30 +900,42 @@ cancelarFechamentosRef.current =
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px]">
+            <table className="w-full min-w-[1080px]">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/70">
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">
                     Cliente / Grupo
                   </th>
 
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">
                     Data
                   </th>
 
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
-                    Produção
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500">
+                    Produtividade
                   </th>
 
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500">
+                    Finsol
+                  </th>
+
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500">
+                    Prestamista
+                  </th>
+
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500">
+                    Assistência
+                  </th>
+
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500">
                     Comissão
                   </th>
 
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500">
                     Total
                   </th>
 
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">
                     Situação
                   </th>
                 </tr>
@@ -865,7 +968,7 @@ cancelarFechamentosRef.current =
                         key={resultado.id}
                         className="border-b border-slate-100 last:border-0"
                       >
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           <p className="text-sm font-semibold text-slate-800">
                             {resultado.nomeCliente}
                           </p>
@@ -875,33 +978,49 @@ cancelarFechamentosRef.current =
                           </p>
                         </td>
 
-                        <td className="px-5 py-4 text-xs text-slate-500">
+                        <td className="px-4 py-4 text-xs text-slate-500">
                           {formatarData(
                             resultado.dataDesembolso
                           )}
                         </td>
 
-                        <td className="px-5 py-4 text-sm font-semibold text-slate-700">
+                        <td className="px-4 py-4 text-right text-sm font-semibold text-slate-700">
                           {formatarMoeda(
-                            resultado.producaoFinsol
+                            resultado.produtividade
                           )}
                         </td>
 
-                        <td className="px-5 py-4 text-sm text-slate-600">
+                        <td className="px-4 py-4 text-right text-sm text-slate-600">
+                          {formatarMoeda(
+                            resultado.seguroFinsol
+                          )}
+                        </td>
+
+                        <td className="px-4 py-4 text-right text-sm text-slate-600">
+                          {formatarMoeda(
+                            resultado.seguroPrestamista
+                          )}
+                        </td>
+
+                        <td className="px-4 py-4 text-center text-sm font-medium text-slate-700">
+                          {resultado.seguroAssistencia || 0}
+                        </td>
+
+                        <td className="px-4 py-4 text-right text-sm text-slate-600">
                           {formatarMoeda(
                             fechamento?.totalComissao ??
                               calculo.totalComissao
                           )}
                         </td>
 
-                        <td className="px-5 py-4 text-sm font-bold text-slate-900">
+                        <td className="px-4 py-4 text-right text-sm font-bold text-slate-900">
                           {formatarMoeda(
                             fechamento?.totalPagar ??
                               calculo.totalPagar
                           )}
                         </td>
 
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           <span
                             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${situacao.className}`}
                           >

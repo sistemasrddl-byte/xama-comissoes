@@ -48,7 +48,7 @@ function calcularComissao(
   regras: RegrasComissao
 ) {
   const comissaoLiberacao =
-    (resultado.producaoFinsol || 0) *
+    (resultado.produtividade || 0) *
     (regras.liberacaoPercentual / 100);
 
   const bonificacaoLiberacao =
@@ -59,12 +59,20 @@ function calcularComissao(
     (resultado.previsaoReembolso || 0) *
     (regras.reembolsoPercentual / 100);
 
-  const comissaoSeguro =
+  const comissaoSeguroFinsol =
     (resultado.seguroFinsol || 0) *
     (regras.seguroPercentual / 100);
 
+  const comissaoSeguroPrestamista =
+    (resultado.seguroPrestamista || 0) *
+    (regras.seguroPercentual / 100);
+
+  const comissaoSeguro =
+    comissaoSeguroFinsol +
+    comissaoSeguroPrestamista;
+
   const comissaoAssistencia =
-    (resultado.quantidadeClientes || 0) *
+    (resultado.seguroAssistencia || 0) *
     regras.assistenciaValorPorCliente;
 
   const totalComissao =
@@ -118,12 +126,12 @@ function encontrarResultadosDoFechamentoAntigo(
   const candidatos = resultados
     .filter(
       (resultado) =>
-        (resultado.producaoFinsol || 0) > 0
+        (resultado.produtividade || 0) > 0
     )
     .map((resultado) => ({
       resultado,
       valor: Math.round(
-        (resultado.producaoFinsol || 0) * 100
+        (resultado.produtividade || 0) * 100
       ),
     }))
     .sort((a, b) => b.valor - a.valor);
@@ -348,7 +356,7 @@ export default function ComissoesPage() {
           (total, resultado) =>
             total +
             centavos(
-              resultado.producaoFinsol
+              resultado.produtividade
             ),
           0
         );
@@ -403,7 +411,7 @@ export default function ComissoesPage() {
 
         const producaoEsperada =
           centavos(
-            fechamento.producaoFinsol
+            fechamento.produtividade
           );
 
         /**
@@ -455,13 +463,13 @@ export default function ComissoesPage() {
             .filter(
               (resultado) =>
                 centavos(
-                  resultado.producaoFinsol
+                  resultado.produtividade
                 ) > 0
             )
             .map((resultado) => ({
               resultado,
               valor: centavos(
-                resultado.producaoFinsol
+                resultado.produtividade
               ),
             }))
             .sort(
@@ -538,7 +546,7 @@ export default function ComissoesPage() {
             "Não foi possível reconciliar o fechamento:",
             fechamento.id,
             "produção:",
-            fechamento.producaoFinsol
+            fechamento.produtividade
           );
 
           continue;
@@ -764,7 +772,7 @@ export default function ComissoesPage() {
                   resultadosDoFechamento,
 
                 producao:
-                  fechamento.producaoFinsol,
+                  fechamento.produtividade,
 
                 comissao:
                   fechamento.totalComissao,
@@ -808,7 +816,7 @@ export default function ComissoesPage() {
               resultadosPendentes.reduce(
                 (total, resultado) =>
                   total +
-                  (resultado.producaoFinsol ||
+                  (resultado.produtividade ||
                     0),
                 0
               );
@@ -882,9 +890,55 @@ export default function ComissoesPage() {
       );
     }, [linhasComissao]);
 
+  /**
+   * Resumo da competência.
+   *
+   * Resultados pendentes são calculados em tempo real.
+   * Fechamentos já realizados usam os valores congelados
+   * no documento de fechamento, evitando que alterações
+   * posteriores nos resultados/regras alterem o histórico.
+   */
   const resumo = useMemo(() => {
-    return linhasPendentes.reduce(
+    return linhasComissao.reduce(
       (acc, linha) => {
+        if (linha.tipo === "fechamento") {
+          acc.producao +=
+            linha.fechamento.produtividade || 0;
+
+          acc.comissaoLiberacao +=
+            linha.fechamento.comissaoLiberacao || 0;
+
+          acc.bonificacaoLiberacao +=
+            linha.fechamento.bonificacaoLiberacao || 0;
+
+          acc.comissaoReembolso +=
+            linha.fechamento.comissaoReembolso || 0;
+
+          acc.comissaoSeguro +=
+            linha.fechamento.comissaoSeguro || 0;
+
+          acc.comissaoAssistencia +=
+            linha.fechamento.comissaoAssistencia || 0;
+
+          acc.comissao +=
+            linha.fechamento.totalComissao || 0;
+
+          acc.bonificacoes +=
+            linha.fechamento.totalBonificacao || 0;
+
+          acc.totalPagar +=
+            linha.fechamento.totalPagar || 0;
+
+          acc.clientes += linha.resultados.reduce(
+            (total, resultado) =>
+              total +
+              (resultado.quantidadeClientes || 0),
+            0
+          );
+
+          return acc;
+        }
+
         linha.resultados.forEach(
           (resultado) => {
             const calculo =
@@ -894,8 +948,7 @@ export default function ComissoesPage() {
               );
 
             acc.producao +=
-              resultado.producaoFinsol ||
-              0;
+              resultado.produtividade || 0;
 
             acc.comissaoLiberacao +=
               calculo.comissaoLiberacao;
@@ -922,8 +975,7 @@ export default function ComissoesPage() {
               calculo.totalPagar;
 
             acc.clientes +=
-              resultado.quantidadeClientes ||
-              0;
+              resultado.quantidadeClientes || 0;
           }
         );
 
@@ -942,7 +994,7 @@ export default function ComissoesPage() {
         clientes: 0,
       }
     );
-  }, [linhasPendentes, regras]);
+  }, [linhasComissao, regras]);
 
   function abrirDetalhamento(
     linha: LinhaComissao
@@ -1094,7 +1146,7 @@ export default function ComissoesPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <ResumoCard
           icon={<BarChart3 size={20} />}
-          label="Produção a calcular"
+          label="Produção"
           valor={formatarMoeda(
             resumo.producao
           )}
@@ -1143,7 +1195,7 @@ export default function ComissoesPage() {
               </h2>
 
               <p className="mt-1 text-xs text-slate-400">
-                Valores disponíveis para fechamento na competência:{" "}
+                Resumo das comissões na competência:{" "}
                 {competencia}
               </p>
             </div>
@@ -1203,7 +1255,7 @@ export default function ComissoesPage() {
               .replace(
                 ".",
                 ","
-              )} / cliente`}
+              )} / seguro`}
             valor={formatarMoeda(
               resumo.comissaoAssistencia
             )}
@@ -1416,7 +1468,7 @@ export default function ComissoesPage() {
 
                       <div className="mt-4 grid grid-cols-2 gap-3">
                         <MiniMetric
-                          label="Produção"
+                          label="Produtividade"
                           value={formatarMoeda(
                             linha.producao
                           )}

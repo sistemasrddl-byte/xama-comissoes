@@ -1,8 +1,8 @@
 import {
   addDoc,
   collection,
-  doc,
   deleteDoc,
+  doc,
   getDoc,
   onSnapshot,
   orderBy,
@@ -27,24 +27,16 @@ export interface Resultado {
   situacao: SituacaoResultado;
 
   dataDesembolso: string;
-  vencimento: string;
-
   nomeCliente: string;
 
   quantidadeClientes: number;
-  renovados: number;
-  retorno: number;
-  novos: number;
-  evasao: number;
 
-  producaoFinsol: number;
+  produtividade: number;
   seguroFinsol: number;
   seguroAssistencia: number;
 
   previsaoReembolso: number;
-
-  propostaFormalizada: number;
-  segurosVendidos: number;
+  seguroPrestamista: number;
 
   observacoes: string;
 
@@ -58,24 +50,16 @@ export interface NovoResultado {
   situacao: SituacaoResultado;
 
   dataDesembolso: string;
-  vencimento: string;
-
   nomeCliente: string;
 
   quantidadeClientes: number;
-  renovados: number;
-  retorno: number;
-  novos: number;
-  evasao: number;
 
-  producaoFinsol: number;
+  produtividade: number;
   seguroFinsol: number;
   seguroAssistencia: number;
 
   previsaoReembolso: number;
-
-  propostaFormalizada: number;
-  segurosVendidos: number;
+  seguroPrestamista: number;
 
   observacoes: string;
 }
@@ -99,8 +83,6 @@ export async function criarResultado(
 
 /**
  * Observa todos os resultados em tempo real.
- *
- * Usada pelas áreas administrativas.
  */
 export function observarResultados(
   callback: (resultados: Resultado[]) => void
@@ -126,10 +108,6 @@ export function observarResultados(
 
 /**
  * Observa somente os resultados de um colaborador.
- *
- * A consulta já é filtrada no Firestore pelo
- * colaboradorId, em vez de baixar todos os
- * resultados e filtrar somente no navegador.
  */
 export function observarResultadosDoColaborador(
   colaboradorId: string,

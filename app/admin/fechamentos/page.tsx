@@ -59,7 +59,7 @@ function calcularComissao(
   regras: RegrasComissao
 ) {
   const comissaoLiberacao =
-    (resultado.producaoFinsol || 0) *
+    (resultado.produtividade || 0) *
     (regras.liberacaoPercentual / 100);
 
   const bonificacaoLiberacao =
@@ -71,12 +71,20 @@ function calcularComissao(
     (resultado.previsaoReembolso || 0) *
     (regras.reembolsoPercentual / 100);
 
-  const comissaoSeguro =
+  const comissaoSeguroFinsol =
     (resultado.seguroFinsol || 0) *
     (regras.seguroPercentual / 100);
 
+  const comissaoSeguroPrestamista =
+    (resultado.seguroPrestamista || 0) *
+    (regras.seguroPercentual / 100);
+
+  const comissaoSeguro =
+    comissaoSeguroFinsol +
+    comissaoSeguroPrestamista;
+
   const comissaoAssistencia =
-    (resultado.quantidadeClientes || 0) *
+    (resultado.seguroAssistencia || 0) *
     regras.assistenciaValorPorCliente;
 
   const totalComissao =
@@ -105,7 +113,7 @@ type LinhaFechamento = {
   colaborador: Colaborador;
   resultados: Resultado[];
 
-  producao: number;
+  produtividade: number;
   totalComissao: number;
   totalBonificacao: number;
   totalPagar: number;
@@ -344,8 +352,8 @@ export default function FechamentosPage() {
               resultados:
                 resultadosDoFechamento,
 
-              producao:
-                fechamento.producaoFinsol,
+              produtividade:
+                fechamento.produtividade,
 
               totalComissao:
                 fechamento.totalComissao,
@@ -392,11 +400,11 @@ export default function FechamentosPage() {
               )
           );
 
-        const producao =
+        const produtividade =
           resultadosPendentes.reduce(
             (total, item) =>
               total +
-              (item.producaoFinsol || 0),
+              (item.produtividade || 0),
             0
           );
 
@@ -432,7 +440,7 @@ export default function FechamentosPage() {
           resultados:
             resultadosPendentes,
 
-          producao,
+          produtividade,
 
           totalComissao,
 
@@ -600,8 +608,8 @@ export default function FechamentosPage() {
          */
         resultadoIds,
 
-        producaoFinsol:
-          linhaSelecionada.producao,
+        produtividade:
+          linhaSelecionada.produtividade,
 
         comissaoLiberacao:
           linhaSelecionada.resultados.reduce(
@@ -1233,7 +1241,7 @@ export default function FechamentosPage() {
           }
           competencia={competencia}
           producao={
-            linhaPendente.producao
+            linhaPendente.produtividade
           }
           totalComissao={
             linhaPendente.totalComissao

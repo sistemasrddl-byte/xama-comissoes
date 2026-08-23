@@ -51,7 +51,7 @@ export default function ComissaoDialog({
   const resumo = resultados.reduce(
     (acc, resultado) => {
       const comissaoLiberacao =
-        (resultado.producaoFinsol || 0) *
+        (resultado.produtividade || 0) *
         (regras.liberacaoPercentual / 100);
 
       const bonificacaoLiberacao =
@@ -72,7 +72,7 @@ export default function ComissaoDialog({
         regras.assistenciaValorPorCliente;
 
       acc.producao +=
-        resultado.producaoFinsol || 0;
+        resultado.produtividade || 0;
 
       acc.reembolso +=
         resultado.previsaoReembolso || 0;

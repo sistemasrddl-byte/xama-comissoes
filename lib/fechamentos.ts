@@ -33,7 +33,7 @@ export interface Fechamento {
    */
   resultadoIds: string[];
 
-  producaoFinsol: number;
+  produtividade: number;
 
   comissaoLiberacao: number;
   comissaoReembolso: number;
@@ -67,7 +67,7 @@ export interface NovoFechamento {
    */
   resultadoIds: string[];
 
-  producaoFinsol: number;
+  produtividade: number;
 
   comissaoLiberacao: number;
   comissaoReembolso: number;

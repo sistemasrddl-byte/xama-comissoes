@@ -2,12 +2,19 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import {
+  FormEvent,
+  useEffect,
+  useState,
+} from "react";
+
 import {
   ArrowLeft,
   CalendarDays,
   FileText,
   Save,
+  ShieldCheck,
+  Target,
   UserRound,
   Users,
   Wallet,
@@ -45,16 +52,16 @@ function moedaParaNumero(valor: string) {
 
   const numero = Number(limpo);
 
-  return Number.isNaN(numero) ? 0 : numero;
+  return Number.isNaN(numero)
+    ? 0
+    : numero;
 }
 
 function aplicarMascaraMoeda(
   valor: string
 ) {
-  const somenteNumeros = valor.replace(
-    /\D/g,
-    ""
-  );
+  const somenteNumeros =
+    valor.replace(/\D/g, "");
 
   if (!somenteNumeros) {
     return "";
@@ -99,28 +106,21 @@ export default function EditarResultadoPage() {
     useState({
       colaboradorId: "",
       competencia: "",
+
       situacao:
         "Grupo Desembolsado" as SituacaoResultado,
 
       dataDesembolso: "",
-      vencimento: "",
 
       nomeCliente: "",
 
       quantidadeClientes: "0",
-      renovados: "0",
-      retorno: "0",
-      novos: "0",
-      evasao: "0",
 
-      producaoFinsol: "",
+      produtividade: "",
       seguroFinsol: "",
       seguroAssistencia: "",
-
       previsaoReembolso: "",
-
-      propostaFormalizada: "0",
-      segurosVendidos: "0",
+      seguroPrestamista: "0",
 
       observacoes: "",
     });
@@ -163,9 +163,6 @@ export default function EditarResultadoPage() {
           dataDesembolso:
             resultado.dataDesembolso || "",
 
-          vencimento:
-            resultado.vencimento || "",
-
           nomeCliente:
             resultado.nomeCliente || "",
 
@@ -173,25 +170,9 @@ export default function EditarResultadoPage() {
             resultado.quantidadeClientes || 0
           ),
 
-          renovados: String(
-            resultado.renovados || 0
-          ),
-
-          retorno: String(
-            resultado.retorno || 0
-          ),
-
-          novos: String(
-            resultado.novos || 0
-          ),
-
-          evasao: String(
-            resultado.evasao || 0
-          ),
-
-          producaoFinsol:
+          produtividade:
             formatarMoedaInput(
-              resultado.producaoFinsol
+              resultado.produtividade
             ),
 
           seguroFinsol:
@@ -199,23 +180,19 @@ export default function EditarResultadoPage() {
               resultado.seguroFinsol
             ),
 
-          seguroAssistencia:
-            formatarMoedaInput(
-              resultado.seguroAssistencia
-            ),
+          seguroAssistencia: String(
+            resultado.seguroAssistencia || 0
+          ),
 
           previsaoReembolso:
             formatarMoedaInput(
               resultado.previsaoReembolso
             ),
 
-          propostaFormalizada: String(
-            resultado.propostaFormalizada || 0
-          ),
-
-          segurosVendidos: String(
-            resultado.segurosVendidos || 0
-          ),
+          seguroPrestamista:
+            formatarMoedaInput(
+              resultado.seguroPrestamista
+            ),
 
           observacoes:
             resultado.observacoes || "",
@@ -305,9 +282,6 @@ export default function EditarResultadoPage() {
         dataDesembolso:
           formulario.dataDesembolso,
 
-        vencimento:
-          formulario.vencimento,
-
         nomeCliente:
           formulario.nomeCliente.trim(),
 
@@ -316,21 +290,9 @@ export default function EditarResultadoPage() {
             formulario.quantidadeClientes
           ) || 0,
 
-        renovados:
-          Number(formulario.renovados) || 0,
-
-        retorno:
-          Number(formulario.retorno) || 0,
-
-        novos:
-          Number(formulario.novos) || 0,
-
-        evasao:
-          Number(formulario.evasao) || 0,
-
-        producaoFinsol:
+        produtividade:
           moedaParaNumero(
-            formulario.producaoFinsol
+            formulario.produtividade
           ),
 
         seguroFinsol:
@@ -339,24 +301,19 @@ export default function EditarResultadoPage() {
           ),
 
         seguroAssistencia:
-          moedaParaNumero(
+          Number(
             formulario.seguroAssistencia
-          ),
+          ) || 0,
 
         previsaoReembolso:
           moedaParaNumero(
             formulario.previsaoReembolso
           ),
 
-        propostaFormalizada:
-          Number(
-            formulario.propostaFormalizada
-          ) || 0,
-
-        segurosVendidos:
-          Number(
-            formulario.segurosVendidos
-          ) || 0,
+        seguroPrestamista:
+          moedaParaNumero(
+            formulario.seguroPrestamista
+          ),
 
         observacoes:
           formulario.observacoes.trim(),
@@ -477,7 +434,10 @@ export default function EditarResultadoPage() {
         />
 
         <div className="mt-6 grid gap-5 md:grid-cols-2">
-          <Field label="Colaborador" required>
+          <Field
+            label="Colaborador"
+            required
+          >
             <select
               value={formulario.colaboradorId}
               onChange={(event) =>
@@ -510,7 +470,10 @@ export default function EditarResultadoPage() {
             </select>
           </Field>
 
-          <Field label="Competência" required>
+          <Field
+            label="Competência"
+            required
+          >
             <input
               type="month"
               value={formulario.competencia}
@@ -535,7 +498,10 @@ export default function EditarResultadoPage() {
         />
 
         <div className="mt-6 grid gap-5 md:grid-cols-2">
-          <Field label="Situação" required>
+          <Field
+            label="Situação"
+            required
+          >
             <select
               value={formulario.situacao}
               onChange={(event) =>
@@ -595,36 +561,8 @@ export default function EditarResultadoPage() {
             />
           </Field>
 
-          <Field
-            label="Vencimento"
-            required
-          >
-            <input
-              type="date"
-              value={formulario.vencimento}
-              onChange={(event) =>
-                atualizarCampo(
-                  "vencimento",
-                  event.target.value
-                )
-              }
-              className={inputClass}
-            />
-          </Field>
-        </div>
-      </section>
-
-      {/* Indicadores */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <SectionTitle
-          icon={<Users size={18} />}
-          title="Indicadores de clientes"
-          description="Informe os números relacionados aos clientes."
-        />
-
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <NumberField
-            label="Clientes"
+            label="Nº clientes"
             value={
               formulario.quantidadeClientes
             }
@@ -635,70 +573,26 @@ export default function EditarResultadoPage() {
               )
             }
           />
-
-          <NumberField
-            label="Renovados"
-            value={formulario.renovados}
-            onChange={(value) =>
-              atualizarCampo(
-                "renovados",
-                aplicarMascaraNumero(value)
-              )
-            }
-          />
-
-          <NumberField
-            label="Retorno"
-            value={formulario.retorno}
-            onChange={(value) =>
-              atualizarCampo(
-                "retorno",
-                aplicarMascaraNumero(value)
-              )
-            }
-          />
-
-          <NumberField
-            label="Novos"
-            value={formulario.novos}
-            onChange={(value) =>
-              atualizarCampo(
-                "novos",
-                aplicarMascaraNumero(value)
-              )
-            }
-          />
-
-          <NumberField
-            label="Evasão"
-            value={formulario.evasao}
-            onChange={(value) =>
-              atualizarCampo(
-                "evasao",
-                aplicarMascaraNumero(value)
-              )
-            }
-          />
         </div>
       </section>
 
-      {/* Produção */}
+      {/* Produção e seguros */}
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <SectionTitle
           icon={<Wallet size={18} />}
-          title="Produção e valores"
-          description="Valores financeiros registrados no resultado."
+          title="Produção e seguros"
+          description="Valores e quantidades registrados no resultado."
         />
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <MoneyField
-            label="Produção Finsol"
+            label="PRODUTIVIDADE"
             value={
-              formulario.producaoFinsol
+              formulario.produtividade
             }
             onChange={(value) =>
               atualizarCampo(
-                "producaoFinsol",
+                "produtividade",
                 aplicarMascaraMoeda(value)
               )
             }
@@ -706,7 +600,9 @@ export default function EditarResultadoPage() {
 
           <MoneyField
             label="Seguro Finsol"
-            value={formulario.seguroFinsol}
+            value={
+              formulario.seguroFinsol
+            }
             onChange={(value) =>
               atualizarCampo(
                 "seguroFinsol",
@@ -715,7 +611,7 @@ export default function EditarResultadoPage() {
             }
           />
 
-          <MoneyField
+          <NumberField
             label="Seguro assistência"
             value={
               formulario.seguroAssistencia
@@ -723,7 +619,7 @@ export default function EditarResultadoPage() {
             onChange={(value) =>
               atualizarCampo(
                 "seguroAssistencia",
-                aplicarMascaraMoeda(value)
+                aplicarMascaraNumero(value)
               )
             }
           />
@@ -740,40 +636,16 @@ export default function EditarResultadoPage() {
               )
             }
           />
-        </div>
-      </section>
 
-      {/* Outros indicadores */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <SectionTitle
-          icon={<FileText size={18} />}
-          title="Outros indicadores"
-          description="Informações complementares do lançamento."
-        />
-
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <NumberField
-            label="Propostas formalizadas"
+          <MoneyField
+            label="Seguro PRESTAMISTA"
             value={
-              formulario.propostaFormalizada
+              formulario.seguroPrestamista
             }
             onChange={(value) =>
               atualizarCampo(
-                "propostaFormalizada",
-                aplicarMascaraNumero(value)
-              )
-            }
-          />
-
-          <NumberField
-            label="Seguros vendidos"
-            value={
-              formulario.segurosVendidos
-            }
-            onChange={(value) =>
-              atualizarCampo(
-                "segurosVendidos",
-                aplicarMascaraNumero(value)
+                "seguroPrestamista",
+                aplicarMascaraMoeda(value)
               )
             }
           />
@@ -866,11 +738,7 @@ function NumberField({
   onChange: (value: string) => void;
 }) {
   return (
-    <div>
-      <label className="mb-2 block text-xs font-semibold text-slate-500">
-        {label}
-      </label>
-
+    <Field label={label}>
       <input
         type="text"
         inputMode="numeric"
@@ -880,7 +748,7 @@ function NumberField({
         }
         className={inputClass}
       />
-    </div>
+    </Field>
   );
 }
 
@@ -894,11 +762,7 @@ function MoneyField({
   onChange: (value: string) => void;
 }) {
   return (
-    <div>
-      <label className="mb-2 block text-xs font-semibold text-slate-500">
-        {label}
-      </label>
-
+    <Field label={label}>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
           R$
@@ -915,7 +779,7 @@ function MoneyField({
           className={`${inputClass} pl-10`}
         />
       </div>
-    </div>
+    </Field>
   );
 }
 
