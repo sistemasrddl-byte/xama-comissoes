@@ -114,7 +114,7 @@ export default function AdminHeader({
 
         <div>
           <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
-            XAMA Comissões - 1.1
+            XAMA Comissões V2
           </p>
 
           <h1 className="text-sm font-semibold text-slate-900 dark:text-white sm:text-base">

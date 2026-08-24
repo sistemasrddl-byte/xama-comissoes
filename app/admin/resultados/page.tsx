@@ -311,11 +311,18 @@ export default function ResultadosPage() {
           </div>
 
           <p className="mt-4 text-xs text-slate-400">
-            SEGURO PRESTAMISTA
+            SEGUROS
           </p>
 
           <p className="mt-1 text-xl font-bold text-slate-900">
-            {resumo.seguroPrestamista}
+            {formatarMoeda(
+              resumo.seguroFinsol +
+                resumo.seguroPrestamista
+            )}
+          </p>
+
+          <p className="mt-1 text-[10px] text-slate-400">
+            Finsol + Prestamista
           </p>
         </div>
 
@@ -485,7 +492,9 @@ export default function ResultadosPage() {
                         </td>
 
                         <td className="px-5 py-4 text-sm text-slate-600">
-                          {resultado.seguroPrestamista}
+                          {formatarMoeda(
+                            resultado.seguroPrestamista
+                          )}
                         </td>
 
                         <td className="px-5 py-4">
@@ -617,7 +626,9 @@ export default function ResultadosPage() {
                         </p>
 
                         <p className="mt-1 text-xs font-semibold text-slate-800">
-                          {resultado.seguroPrestamista}
+                          {formatarMoeda(
+                            resultado.seguroPrestamista
+                          )}
                         </p>
                       </div>
                     </div>

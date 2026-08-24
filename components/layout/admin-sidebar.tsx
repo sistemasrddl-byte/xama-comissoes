@@ -150,7 +150,7 @@ export default function AdminSidebar({
 
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
-                XAMA Comissões - 1.1
+                XAMA Comissões V2
               </p>
 
               <p className="mt-0.5 truncate text-[10px] text-slate-400">
@@ -253,7 +253,7 @@ export default function AdminSidebar({
 
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
-                    XAMA Comissões - 1.1
+                    XAMA Comissões V2
                   </p>
 
                   <p className="mt-0.5 truncate text-[10px] text-slate-400">

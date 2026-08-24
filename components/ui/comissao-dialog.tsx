@@ -63,9 +63,23 @@ export default function ComissaoDialog({
         (resultado.previsaoReembolso || 0) *
         (regras.reembolsoPercentual / 100);
 
-      const comissaoSeguro =
-        (resultado.seguroFinsol || 0) *
+      const seguroFinsol =
+        resultado.seguroFinsol || 0;
+
+      const seguroPrestamista =
+        resultado.seguroPrestamista || 0;
+
+      const comissaoSeguroFinsol =
+        seguroFinsol *
         (regras.seguroPercentual / 100);
+
+      const comissaoSeguroPrestamista =
+        seguroPrestamista *
+        (regras.seguroPercentual / 100);
+
+      const comissaoSeguro =
+        comissaoSeguroFinsol +
+        comissaoSeguroPrestamista;
 
       const comissaoAssistencia =
         (resultado.quantidadeClientes || 0) *
@@ -77,8 +91,10 @@ export default function ComissaoDialog({
       acc.reembolso +=
         resultado.previsaoReembolso || 0;
 
-      acc.seguro +=
-        resultado.seguroFinsol || 0;
+      acc.seguroFinsol += seguroFinsol;
+
+      acc.seguroPrestamista +=
+        seguroPrestamista;
 
       acc.clientes +=
         resultado.quantidadeClientes || 0;
@@ -103,7 +119,8 @@ export default function ComissaoDialog({
     {
       producao: 0,
       reembolso: 0,
-      seguro: 0,
+      seguroFinsol: 0,
+      seguroPrestamista: 0,
       clientes: 0,
       comissaoLiberacao: 0,
       bonificacaoLiberacao: 0,
@@ -201,16 +218,31 @@ export default function ComissaoDialog({
               )}
             />
 
-            {/* Seguro */}
+            {/* Seguro Finsol */}
             <DetalheLinha
-              titulo="Comissão por seguros"
+              titulo="Seguro Finsol"
               descricao={`${formatarMoeda(
-                resumo.seguro
+                resumo.seguroFinsol
               )} × ${formatarPercentual(
                 regras.seguroPercentual
               )}`}
               valor={formatarMoeda(
-                resumo.comissaoSeguro
+                resumo.seguroFinsol *
+                  (regras.seguroPercentual / 100)
+              )}
+            />
+
+            {/* Seguro Prestamista */}
+            <DetalheLinha
+              titulo="Seguro Prestamista"
+              descricao={`${formatarMoeda(
+                resumo.seguroPrestamista
+              )} × ${formatarPercentual(
+                regras.seguroPercentual
+              )}`}
+              valor={formatarMoeda(
+                resumo.seguroPrestamista *
+                  (regras.seguroPercentual / 100)
               )}
             />
 
@@ -235,7 +267,7 @@ export default function ComissaoDialog({
                 </p>
 
                 <p className="mt-1 text-xs text-slate-400">
-                  Soma das quatro comissões.
+                  Soma das comissões de liberação, reembolso, seguros e assistência.
                 </p>
               </div>
 
