@@ -185,6 +185,22 @@ function alterarCompetencia(
   ).padStart(2, "0")}`;
 }
 
+function primeiroNomeDoColaborador(colaborador: Colaborador) {
+  const dados = colaborador as Colaborador & {
+    primeiroNome?: string;
+    sobrenome?: string;
+  };
+
+  const primeiroNome = dados.primeiroNome?.trim();
+
+  if (primeiroNome) {
+    return primeiroNome;
+  }
+
+  const nomeCompleto = dados.nome?.trim() ?? "";
+  return nomeCompleto.split(/\s+/)[0] || "Colaborador";
+}
+
 interface IndicadorColaborador {
   id: string;
   nome: string;
@@ -260,7 +276,10 @@ export default function AdminPage() {
     const mapa = new Map<string, string>();
 
     colaboradores.forEach((colaborador) => {
-      mapa.set(colaborador.id, colaborador.nome);
+      mapa.set(
+        colaborador.id,
+        primeiroNomeDoColaborador(colaborador)
+      );
     });
 
     return mapa;
@@ -276,7 +295,7 @@ export default function AdminPage() {
       colaboradores.forEach((colaborador) => {
         mapa.set(colaborador.id, {
           id: colaborador.id,
-          nome: colaborador.nome,
+          nome: primeiroNomeDoColaborador(colaborador),
           quantidadeClientes: 0,
           produtividade: 0,
           previsaoReembolso: 0,
@@ -617,26 +636,16 @@ export default function AdminPage() {
                           >
                             <td className="p-0">
                               <div
-                                className={`flex min-h-[58px] items-center gap-2.5 px-3 py-2.5 text-white ${
-                                  coresOperador[
-                                    index %
-                                      coresOperador.length
-                                  ]
-                                }`}
-                              >
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20">
-                                  <UserRound size={16} />
-                                </div>
-
-                                <div className="min-w-0">
-                                  <p className="truncate text-[12px] font-bold">
-                                    {item.nome}
-                                  </p>
-                                  <p className="text-[9px] text-white/80">
-                                    {item.resultados} resultado(s)
-                                  </p>
-                                </div>
-                              </div>
+                              className={`flex min-h-[58px] items-center justify-center px-3 py-2.5 text-white ${
+                                coresOperador[
+                                  index % coresOperador.length
+                                ]
+                              }`}
+                            >
+                              <p className="truncate text-center text-[20px] font-bold">
+                                {item.nome}
+                              </p>
+                            </div>
                             </td>
 
                             <td className="pl-2 pr-4 py-3 text-center text-[12px] font-bold text-slate-900 whitespace-nowrap">
@@ -679,9 +688,9 @@ export default function AdminPage() {
                       )}
 
                       <tr className="bg-[#121a45] text-white">
-                        <td className="px-3 py-4 text-left text-[12px] font-extrabold uppercase leading-4">
-                          TOTAL DA<br />AGÊNCIA
-                        </td>
+                                              <td className="px-3 py-4 text-center align-middle text-[12px] font-extrabold uppercase leading-4">
+                        TOTAL DA<br />AGÊNCIA
+                      </td>
 
                         <td className="px-2 py-4 text-center text-[14px] font-extrabold text-amber-300 whitespace-nowrap">
                           {numero(

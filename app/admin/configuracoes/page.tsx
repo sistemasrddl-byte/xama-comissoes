@@ -46,6 +46,7 @@ import {
 import { getApps, initializeApp } from "firebase/app";
 
 import { auth, db } from "@/lib/firebase";
+import { atualizarUsuarioAdmin } from "./actions";
 import { getUserProfile } from "@/lib/user";
 
 function formatarMoedaInput(valor: number) {
@@ -537,24 +538,31 @@ export default function ConfiguracoesPage() {
       setMensagem("");
 
       if (editandoUsuario) {
-        await updateDoc(
-          doc(
-            db,
-            "users",
-            editandoUsuario.id
-          ),
-          {
-            nome: usuarioNome.trim(),
-            email:
-              usuarioEmail.trim().toLowerCase(),
-            role: usuarioRole,
-            ativo: usuarioAtivo,
-            colaboradorId:
-              usuarioRole === "colaborador"
-                ? usuarioColaboradorId
-                : null,
-          }
-        );
+        const usuarioAtual = auth.currentUser;
+
+        if (!usuarioAtual) {
+          throw new Error(
+            "Sua sessão expirou. Faça login novamente."
+          );
+        }
+
+        const idToken =
+          await usuarioAtual.getIdToken(true);
+
+        await atualizarUsuarioAdmin({
+          uid: editandoUsuario.id,
+          nome: usuarioNome.trim(),
+          email: usuarioEmail
+            .trim()
+            .toLowerCase(),
+          role: usuarioRole,
+          ativo: usuarioAtivo,
+          colaboradorId:
+            usuarioRole === "colaborador"
+              ? usuarioColaboradorId
+              : null,
+          idToken,
+        });
 
         setUsuarios((anterior) =>
           anterior.map((item) =>

@@ -15,6 +15,8 @@ import { db } from "./firebase";
 export interface Colaborador {
   id: string;
   nome: string;
+  primeiroNome: string;
+  sobrenome: string;
   email: string;
   telefone: string;
   cpf: string;
@@ -27,6 +29,8 @@ export interface Colaborador {
 
 export interface NovoColaborador {
   nome: string;
+  primeiroNome: string;
+  sobrenome: string;
   email: string;
   telefone: string;
   cpf: string;
@@ -38,6 +42,8 @@ export interface NovoColaborador {
 
 export interface AtualizarColaborador {
   nome: string;
+  primeiroNome: string;
+  sobrenome: string;
   email: string;
   telefone: string;
   cpf: string;
@@ -45,6 +51,19 @@ export interface AtualizarColaborador {
   cargo: string;
   metaMensal: number;
   ativo: boolean;
+}
+
+export function obterPrimeiroNome(
+  colaborador: Pick<
+    Colaborador,
+    "nome" | "primeiroNome"
+  >
+) {
+  return (
+    colaborador.primeiroNome?.trim() ||
+    colaborador.nome.trim().split(/\\s+/)[0] ||
+    "Colaborador"
+  );
 }
 
 const colaboradoresRef = collection(

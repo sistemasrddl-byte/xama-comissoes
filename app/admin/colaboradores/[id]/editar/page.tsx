@@ -143,7 +143,8 @@ export default function EditarColaboradorPage() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
 
-  const [nome, setNome] = useState("");
+  const [primeiroNome, setPrimeiroNome] = useState("");
+  const [sobrenome, setSobrenome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [cpf, setCpf] = useState("");
@@ -161,7 +162,21 @@ export default function EditarColaboradorPage() {
         setColaborador(dados);
 
         if (dados) {
-          setNome(dados.nome);
+          const nomeCompleto = dados.nome?.trim() || "";
+          const partesNome = nomeCompleto.split(/\s+/).filter(Boolean);
+
+          setPrimeiroNome(
+            dados.primeiroNome?.trim() ||
+              partesNome[0] ||
+              ""
+          );
+
+          setSobrenome(
+            dados.sobrenome?.trim() ||
+              partesNome.slice(1).join(" ") ||
+              ""
+          );
+
           setEmail(dados.email);
           setTelefone(dados.telefone);
           setCpf(dados.cpf);
@@ -195,8 +210,8 @@ export default function EditarColaboradorPage() {
 
     setErro("");
 
-    if (!nome.trim()) {
-      setErro("Informe o nome do colaborador.");
+    if (!primeiroNome.trim()) {
+      setErro("Informe o primeiro nome do colaborador.");
       return;
     }
 
@@ -217,8 +232,14 @@ export default function EditarColaboradorPage() {
     try {
       setSalvando(true);
 
+      const nomeCompleto = [primeiroNome.trim(), sobrenome.trim()]
+        .filter(Boolean)
+        .join(" ");
+
       await atualizarColaborador(id, {
-        nome: nome.trim(),
+        nome: nomeCompleto,
+        primeiroNome: primeiroNome.trim(),
+        sobrenome: sobrenome.trim(),
         email: email.trim(),
         telefone: telefone.trim(),
         cpf: cpf.trim(),
@@ -315,9 +336,10 @@ export default function EditarColaboradorPage() {
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+            {/* Primeiro nome */}
+            <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
-                Nome completo *
+                Primeiro nome *
               </label>
 
               <div className="relative">
@@ -327,15 +349,33 @@ export default function EditarColaboradorPage() {
                 />
 
                 <input
-                  value={nome}
+                  value={primeiroNome}
                   onChange={(e) =>
-                    setNome(e.target.value)
+                    setPrimeiroNome(e.target.value)
                   }
+                  placeholder="Ex.: João"
                   className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-4 text-sm outline-none focus:border-[#f97316] focus:ring-4 focus:ring-orange-500/10"
                 />
               </div>
             </div>
 
+            {/* Sobrenome */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Sobrenome
+              </label>
+
+              <input
+                value={sobrenome}
+                onChange={(e) =>
+                  setSobrenome(e.target.value)
+                }
+                placeholder="Ex.: da Silva"
+                className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none focus:border-[#f97316] focus:ring-4 focus:ring-orange-500/10"
+              />
+            </div>
+
+            {/* CPF */}
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 CPF
@@ -354,6 +394,7 @@ export default function EditarColaboradorPage() {
               />
             </div>
 
+            {/* Data de admissão */}
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Data de admissão

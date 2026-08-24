@@ -70,14 +70,36 @@ export default function AdminHeader({
     try {
       setMenuUsuarioAberto(false);
 
-      await signOut(auth);
-
+      /*
+       * Navega para fora da área administrativa antes de
+       * encerrar a sessão. Assim, os componentes das páginas
+       * administrativas são desmontados e seus listeners
+       * do Firestore podem executar o cleanup antes da troca
+       * de autenticação.
+       */
       router.replace("/");
+
+      /*
+       * Dá um pequeno intervalo para o Next iniciar a
+       * desmontagem da área administrativa antes de alterar
+       * o estado de autenticação.
+       */
+      await new Promise((resolve) =>
+        setTimeout(resolve, 150)
+      );
+
+      await signOut(auth);
     } catch (error) {
       console.error(
         "Erro ao sair do sistema:",
         error
       );
+
+      /*
+       * Mesmo que a navegação/limpeza tenha algum problema,
+       * garante que o usuário não permaneça na área administrativa.
+       */
+      router.replace("/");
     }
   }
 
@@ -114,7 +136,7 @@ export default function AdminHeader({
 
         <div>
           <p className="text-xs font-medium text-slate-400 dark:text-slate-500">
-            XAMA Comissões V2
+            XAMA Comissões V2.1
           </p>
 
           <h1 className="text-sm font-semibold text-slate-900 dark:text-white sm:text-base">

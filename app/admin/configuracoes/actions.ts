@@ -106,3 +106,119 @@ export async function definirAdministrador(
     uid,
   };
 }
+
+export async function atualizarUsuarioAdmin(dados: {
+  uid: string;
+  nome: string;
+  email: string;
+  role: "admin" | "colaborador";
+  ativo: boolean;
+  colaboradorId?: string | null;
+  idToken: string;
+}) {
+  const app = getFirebaseAdmin();
+
+  const adminAuth = getAuth(app);
+  const db = getFirestore(app);
+
+  const email = dados.email
+    .trim()
+    .toLowerCase();
+
+  // Verifica quem está solicitando a alteração.
+  const token = await adminAuth.verifyIdToken(
+    dados.idToken
+  );
+
+  // Apenas administradores ativos podem alterar
+  // os dados de outros usuários.
+  if (
+    token.role !== "admin" ||
+    token.ativo !== true
+  ) {
+    throw new Error(
+      "Apenas administradores podem alterar usuários."
+    );
+  }
+
+  // Confirma que o usuário existe no
+  // Firebase Authentication.
+  const usuarioAtual =
+    await adminAuth.getUser(dados.uid);
+
+  const emailAnterior =
+    usuarioAtual.email?.toLowerCase() ?? "";
+
+  try {
+    // Mantém o Firebase Authentication
+    // sincronizado com o e-mail do sistema.
+    await adminAuth.updateUser(dados.uid, {
+      email,
+      displayName: dados.nome.trim(),
+      disabled: !dados.ativo,
+    });
+
+    // Mantém as permissões atualizadas.
+    await adminAuth.setCustomUserClaims(
+      dados.uid,
+      {
+        role: dados.role,
+        ativo: dados.ativo,
+        colaboradorId:
+          dados.role === "colaborador"
+            ? dados.colaboradorId ?? null
+            : null,
+      }
+    );
+
+    // Mantém o Firestore sincronizado.
+    await db
+      .collection("users")
+      .doc(dados.uid)
+      .update({
+        nome: dados.nome.trim(),
+        email,
+        role: dados.role,
+        ativo: dados.ativo,
+        colaboradorId:
+          dados.role === "colaborador"
+            ? dados.colaboradorId ?? null
+            : null,
+      });
+
+    return {
+      sucesso: true,
+      uid: dados.uid,
+      email,
+    };
+  } catch (error) {
+    console.error(
+      "Erro ao atualizar usuário administrativo:",
+      error
+    );
+
+    // Se a sincronização no Firestore falhar
+    // depois da alteração no Authentication,
+    // tenta restaurar o e-mail anterior.
+    if (
+      emailAnterior &&
+      emailAnterior !== email
+    ) {
+      try {
+        await adminAuth.updateUser(
+          dados.uid,
+          {
+            email: emailAnterior,
+          }
+        );
+      } catch (rollbackError) {
+        console.error(
+          "Erro ao restaurar e-mail anterior:",
+          rollbackError
+        );
+      }
+    }
+
+    throw error;
+  }
+}

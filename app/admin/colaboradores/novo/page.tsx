@@ -93,7 +93,10 @@ function converterMoedaParaNumero(valor: string) {
 export default function NovoColaboradorPage() {
   const router = useRouter();
 
-  const [nome, setNome] = useState("");
+  const [primeiroNome, setPrimeiroNome] =
+    useState("");
+  const [sobrenome, setSobrenome] =
+    useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [cpf, setCpf] = useState("");
@@ -112,8 +115,13 @@ export default function NovoColaboradorPage() {
 
     setErro("");
 
-    if (!nome.trim()) {
-      setErro("Informe o nome do colaborador.");
+    if (!primeiroNome.trim()) {
+      setErro("Informe o primeiro nome do colaborador.");
+      return;
+    }
+
+    if (!sobrenome.trim()) {
+      setErro("Informe o sobrenome do colaborador.");
       return;
     }
 
@@ -128,7 +136,9 @@ export default function NovoColaboradorPage() {
       setSalvando(true);
 
       await criarColaborador({
-        nome: nome.trim(),
+        nome: `${primeiroNome.trim()} ${sobrenome.trim()}`.trim(),
+        primeiroNome: primeiroNome.trim(),
+        sobrenome: sobrenome.trim(),
         email: email.trim(),
         telefone: telefone.trim(),
         cpf: cpf.trim(),
@@ -197,13 +207,13 @@ export default function NovoColaboradorPage() {
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            {/* Nome */}
-            <div className="sm:col-span-2">
+            {/* Primeiro nome */}
+            <div>
               <label
-                htmlFor="nome"
+                htmlFor="primeiroNome"
                 className="mb-2 block text-sm font-medium text-slate-700"
               >
-                Nome completo *
+                Primeiro nome *
               </label>
 
               <div className="relative">
@@ -213,16 +223,37 @@ export default function NovoColaboradorPage() {
                 />
 
                 <input
-                  id="nome"
+                  id="primeiroNome"
                   type="text"
-                  value={nome}
+                  value={primeiroNome}
                   onChange={(event) =>
-                    setNome(event.target.value)
+                    setPrimeiroNome(event.target.value)
                   }
-                  placeholder="Digite o nome completo"
+                  placeholder="Digite o primeiro nome"
                   className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#f97316] focus:ring-4 focus:ring-orange-500/10"
                 />
               </div>
+            </div>
+
+            {/* Sobrenome */}
+            <div>
+              <label
+                htmlFor="sobrenome"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                Sobrenome *
+              </label>
+
+              <input
+                id="sobrenome"
+                type="text"
+                value={sobrenome}
+                onChange={(event) =>
+                  setSobrenome(event.target.value)
+                }
+                placeholder="Digite o sobrenome"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-[#f97316] focus:ring-4 focus:ring-orange-500/10"
+              />
             </div>
 
             {/* CPF */}
