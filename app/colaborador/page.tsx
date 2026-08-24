@@ -801,23 +801,23 @@ cancelarFechamentosRef.current =
             estilo="green"
           />
 
-          <div className="rounded-2xl border border-orange-400/30 bg-orange-500/10 p-4 shadow-sm sm:p-5">
+          <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 shadow-sm sm:p-5 dark:border-orange-800/60 dark:bg-orange-950/50">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/15 text-orange-400">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400">
                 <CircleDollarSign size={18} />
               </div>
 
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-300">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300">
                   Total a receber
                 </p>
-                <p className="mt-1 text-xl font-bold text-white sm:text-2xl">
+                <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">
                   {formatarMoeda(resumo.totalPagar)}
                 </p>
               </div>
             </div>
 
-            <p className="mt-3 text-[10px] text-slate-400">
+            <p className="mt-3 text-[10px] text-slate-500 dark:text-slate-400">
               Comissões + bonificações da competência.
             </p>
           </div>
