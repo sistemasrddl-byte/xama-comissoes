@@ -63,18 +63,12 @@ export default function ComissaoDialog({
         (resultado.previsaoReembolso || 0) *
         (regras.reembolsoPercentual / 100);
 
-      const seguroFinsol =
-        resultado.seguroFinsol || 0;
-
-      const seguroPrestamista =
-        resultado.seguroPrestamista || 0;
-
       const comissaoSeguroFinsol =
-        seguroFinsol *
+        (resultado.seguroFinsol || 0) *
         (regras.seguroPercentual / 100);
 
       const comissaoSeguroPrestamista =
-        seguroPrestamista *
+        (resultado.seguroPrestamista || 0) *
         (regras.seguroPercentual / 100);
 
       const comissaoSeguro =
@@ -82,7 +76,7 @@ export default function ComissaoDialog({
         comissaoSeguroPrestamista;
 
       const comissaoAssistencia =
-        (resultado.quantidadeClientes || 0) *
+        (resultado.seguroAssistencia || 0) *
         regras.assistenciaValorPorCliente;
 
       acc.producao +=
@@ -91,13 +85,17 @@ export default function ComissaoDialog({
       acc.reembolso +=
         resultado.previsaoReembolso || 0;
 
-      acc.seguroFinsol += seguroFinsol;
+      acc.seguroFinsol +=
+        resultado.seguroFinsol || 0;
 
       acc.seguroPrestamista +=
-        seguroPrestamista;
+        resultado.seguroPrestamista || 0;
 
       acc.clientes +=
         resultado.quantidadeClientes || 0;
+
+      acc.assistencias +=
+        resultado.seguroAssistencia || 0;
 
       acc.comissaoLiberacao +=
         comissaoLiberacao;
@@ -107,6 +105,12 @@ export default function ComissaoDialog({
 
       acc.comissaoReembolso +=
         comissaoReembolso;
+
+      acc.comissaoSeguroFinsol +=
+        comissaoSeguroFinsol;
+
+      acc.comissaoSeguroPrestamista +=
+        comissaoSeguroPrestamista;
 
       acc.comissaoSeguro +=
         comissaoSeguro;
@@ -122,9 +126,12 @@ export default function ComissaoDialog({
       seguroFinsol: 0,
       seguroPrestamista: 0,
       clientes: 0,
+      assistencias: 0,
       comissaoLiberacao: 0,
       bonificacaoLiberacao: 0,
       comissaoReembolso: 0,
+      comissaoSeguroFinsol: 0,
+      comissaoSeguroPrestamista: 0,
       comissaoSeguro: 0,
       comissaoAssistencia: 0,
     }
@@ -220,36 +227,34 @@ export default function ComissaoDialog({
 
             {/* Seguro Finsol */}
             <DetalheLinha
-              titulo="Seguro Finsol"
+              titulo="Comissão por seguro Finsol"
               descricao={`${formatarMoeda(
                 resumo.seguroFinsol
               )} × ${formatarPercentual(
                 regras.seguroPercentual
               )}`}
               valor={formatarMoeda(
-                resumo.seguroFinsol *
-                  (regras.seguroPercentual / 100)
+                resumo.comissaoSeguroFinsol
               )}
             />
 
             {/* Seguro Prestamista */}
             <DetalheLinha
-              titulo="Seguro Prestamista"
+              titulo="Comissão por seguro prestamista"
               descricao={`${formatarMoeda(
                 resumo.seguroPrestamista
               )} × ${formatarPercentual(
                 regras.seguroPercentual
               )}`}
               valor={formatarMoeda(
-                resumo.seguroPrestamista *
-                  (regras.seguroPercentual / 100)
+                resumo.comissaoSeguroPrestamista
               )}
             />
 
             {/* Assistência */}
             <DetalheLinha
               titulo="Comissão por assistência"
-              descricao={`${resumo.clientes} cliente(s) × ${formatarMoeda(
+              descricao={`${resumo.assistencias} assistência(s) × ${formatarMoeda(
                 regras.assistenciaValorPorCliente
               )}`}
               valor={formatarMoeda(
@@ -267,7 +272,7 @@ export default function ComissaoDialog({
                 </p>
 
                 <p className="mt-1 text-xs text-slate-400">
-                  Soma das comissões de liberação, reembolso, seguros e assistência.
+                  Soma das quatro comissões.
                 </p>
               </div>
 

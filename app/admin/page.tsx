@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowDownAZ,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -185,22 +186,6 @@ function alterarCompetencia(
   ).padStart(2, "0")}`;
 }
 
-function primeiroNomeDoColaborador(colaborador: Colaborador) {
-  const dados = colaborador as Colaborador & {
-    primeiroNome?: string;
-    sobrenome?: string;
-  };
-
-  const primeiroNome = dados.primeiroNome?.trim();
-
-  if (primeiroNome) {
-    return primeiroNome;
-  }
-
-  const nomeCompleto = dados.nome?.trim() ?? "";
-  return nomeCompleto.split(/\s+/)[0] || "Colaborador";
-}
-
 interface IndicadorColaborador {
   id: string;
   nome: string;
@@ -225,6 +210,11 @@ export default function AdminPage() {
 
   const [competenciaSelecionada, setCompetenciaSelecionada] =
     useState(competenciaAtual());
+
+  const [ordenacaoOperador, setOrdenacaoOperador] =
+    useState<"produtividade" | "alfabetica">(
+      "produtividade"
+    );
 
   useEffect(() => {
     let carregouResultados = false;
@@ -276,10 +266,7 @@ export default function AdminPage() {
     const mapa = new Map<string, string>();
 
     colaboradores.forEach((colaborador) => {
-      mapa.set(
-        colaborador.id,
-        primeiroNomeDoColaborador(colaborador)
-      );
+      mapa.set(colaborador.id, colaborador.nome);
     });
 
     return mapa;
@@ -295,7 +282,7 @@ export default function AdminPage() {
       colaboradores.forEach((colaborador) => {
         mapa.set(colaborador.id, {
           id: colaborador.id,
-          nome: primeiroNomeDoColaborador(colaborador),
+          nome: colaborador.nome,
           quantidadeClientes: 0,
           produtividade: 0,
           previsaoReembolso: 0,
@@ -364,6 +351,14 @@ export default function AdminPage() {
 
       return Array.from(mapa.values()).sort(
         (a, b) => {
+          if (ordenacaoOperador === "alfabetica") {
+            return a.nome.localeCompare(
+              b.nome,
+              "pt-BR",
+              { sensitivity: "base" }
+            );
+          }
+
           if (
             b.produtividade !==
             a.produtividade
@@ -376,7 +371,8 @@ export default function AdminPage() {
 
           return a.nome.localeCompare(
             b.nome,
-            "pt-BR"
+            "pt-BR",
+            { sensitivity: "base" }
           );
         }
       );
@@ -384,6 +380,7 @@ export default function AdminPage() {
       colaboradores,
       colaboradoresMap,
       resultadosDaCompetencia,
+      ordenacaoOperador,
     ]);
 
   const totalAgencia = useMemo(() => {
@@ -583,10 +580,41 @@ export default function AdminPage() {
                     <thead>
                       <tr className="border-b border-[#26315f] bg-[#171d4d] text-white">
                         <th className="w-[23%] px-2 py-3.5 text-center text-[9px] font-bold uppercase leading-3 tracking-wide">
-                          <div className="flex flex-col items-center justify-center gap-1.5">
-                            <UserRound size={22} strokeWidth={2.2} />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOrdenacaoOperador((atual) =>
+                                atual === "produtividade"
+                                  ? "alfabetica"
+                                  : "produtividade"
+                              )
+                            }
+                            title={
+                              ordenacaoOperador === "produtividade"
+                                ? "Ordenar alfabeticamente"
+                                : "Ordenar por produtividade"
+                            }
+                            aria-label={
+                              ordenacaoOperador === "produtividade"
+                                ? "Ordenar operadores alfabeticamente"
+                                : "Ordenar operadores por produtividade"
+                            }
+                            className="mx-auto flex flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-1 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
+                          >
+                            <span className="flex items-center justify-center gap-2">
+                              <UserRound size={22} strokeWidth={2.2} />
+                              <ArrowDownAZ
+                                size={15}
+                                strokeWidth={2.2}
+                                className={
+                                  ordenacaoOperador === "alfabetica"
+                                    ? "rotate-180 transition-transform"
+                                    : "transition-transform"
+                                }
+                              />
+                            </span>
                             <span>Operador</span>
-                          </div>
+                          </button>
                         </th>
                         <th className="w-[7%] px-1 py-3.5 text-center text-[9px] font-bold uppercase leading-3 tracking-wide">
                           <div className="flex flex-col items-center justify-center gap-1.5">
@@ -636,16 +664,26 @@ export default function AdminPage() {
                           >
                             <td className="p-0">
                               <div
-                              className={`flex min-h-[58px] items-center justify-center px-3 py-2.5 text-white ${
-                                coresOperador[
-                                  index % coresOperador.length
-                                ]
-                              }`}
-                            >
-                              <p className="truncate text-center text-[20px] font-bold">
-                                {item.nome}
-                              </p>
-                            </div>
+                                className={`flex min-h-[58px] items-center gap-2.5 px-3 py-2.5 text-white ${
+                                  coresOperador[
+                                    index %
+                                      coresOperador.length
+                                  ]
+                                }`}
+                              >
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20">
+                                  <UserRound size={16} />
+                                </div>
+
+                                <div className="min-w-0">
+                                  <p className="truncate text-[12px] font-bold">
+                                    {item.nome}
+                                  </p>
+                                  <p className="text-[9px] text-white/80">
+                                    {item.resultados} resultado(s)
+                                  </p>
+                                </div>
+                              </div>
                             </td>
 
                             <td className="pl-2 pr-4 py-3 text-center text-[12px] font-bold text-slate-900 whitespace-nowrap">
@@ -688,9 +726,9 @@ export default function AdminPage() {
                       )}
 
                       <tr className="bg-[#121a45] text-white">
-                                              <td className="px-3 py-4 text-center align-middle text-[12px] font-extrabold uppercase leading-4">
-                        TOTAL DA<br />AGÊNCIA
-                      </td>
+                        <td className="px-3 py-4 text-left text-[12px] font-extrabold uppercase leading-4">
+                          TOTAL DA<br />AGÊNCIA
+                        </td>
 
                         <td className="px-2 py-4 text-center text-[14px] font-extrabold text-amber-300 whitespace-nowrap">
                           {numero(

@@ -34,16 +34,18 @@ import {
   orderBy,
   query,
   where,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import {
+  createUserWithEmailAndPassword,
   getAuth,
   onAuthStateChanged,
+  signOut,
 } from "firebase/auth";
 import { getApps, initializeApp } from "firebase/app";
 
 import { auth, db } from "@/lib/firebase";
-import { atualizarUsuarioAdmin, criarUsuarioAdmin } from "./actions";
 import { getUserProfile } from "@/lib/user";
 
 function formatarMoedaInput(valor: number) {
@@ -68,6 +70,28 @@ type ColaboradorOpcao = {
   nome: string;
 };
 
+
+function criarAuthSecundario() {
+  const config = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  };
+
+  const nomeApp = "xama-admin-user-creator";
+  const appExistente = getApps().find(
+    (app) => app.name === nomeApp
+  );
+
+  const app =
+    appExistente ??
+    initializeApp(config, nomeApp);
+
+  return getAuth(app);
+}
 
 
 const FRASES_MOTIVACIONAIS = [
@@ -513,31 +537,24 @@ export default function ConfiguracoesPage() {
       setMensagem("");
 
       if (editandoUsuario) {
-        const usuarioAtual = auth.currentUser;
-
-        if (!usuarioAtual) {
-          throw new Error(
-            "Sua sessão expirou. Faça login novamente."
-          );
-        }
-
-        const idToken =
-          await usuarioAtual.getIdToken(true);
-
-        await atualizarUsuarioAdmin({
-          uid: editandoUsuario.id,
-          nome: usuarioNome.trim(),
-          email: usuarioEmail
-            .trim()
-            .toLowerCase(),
-          role: usuarioRole,
-          ativo: usuarioAtivo,
-          colaboradorId:
-            usuarioRole === "colaborador"
-              ? usuarioColaboradorId
-              : null,
-          idToken,
-        });
+        await updateDoc(
+          doc(
+            db,
+            "users",
+            editandoUsuario.id
+          ),
+          {
+            nome: usuarioNome.trim(),
+            email:
+              usuarioEmail.trim().toLowerCase(),
+            role: usuarioRole,
+            ativo: usuarioAtivo,
+            colaboradorId:
+              usuarioRole === "colaborador"
+                ? usuarioColaboradorId
+                : null,
+          }
+        );
 
         setUsuarios((anterior) =>
           anterior.map((item) =>
@@ -565,20 +582,46 @@ export default function ConfiguracoesPage() {
           "Usuário atualizado com sucesso."
         );
       } else {
-        const resultado = await criarUsuarioAdmin({
-          nome: usuarioNome.trim(),
-          email: usuarioEmail.trim().toLowerCase(),
-          senha: usuarioSenha,
-          role: usuarioRole,
-          ativo: usuarioAtivo,
-          colaboradorId:
-            usuarioRole === "colaborador"
-              ? usuarioColaboradorId
-              : null,
-        });
+        const authSecundario =
+          criarAuthSecundario();
+
+        const credencial =
+          await createUserWithEmailAndPassword(
+            authSecundario,
+            usuarioEmail
+              .trim()
+              .toLowerCase(),
+            usuarioSenha
+          );
+
+        await setDoc(
+          doc(
+            db,
+            "users",
+            credencial.user.uid
+          ),
+          {
+            nome: usuarioNome.trim(),
+            email:
+              usuarioEmail
+                .trim()
+                .toLowerCase(),
+            role: usuarioRole,
+            ativo: usuarioAtivo,
+            colaboradorId:
+              usuarioRole ===
+              "colaborador"
+                ? usuarioColaboradorId
+                : null,
+            criadoEm:
+              new Date().toISOString(),
+          }
+        );
+
+        await signOut(authSecundario);
 
         const novo: UsuarioSistema = {
-          id: resultado.uid,
+          id: credencial.user.uid,
           nome: usuarioNome.trim(),
           email:
             usuarioEmail
@@ -587,7 +630,8 @@ export default function ConfiguracoesPage() {
           role: usuarioRole,
           ativo: usuarioAtivo,
           colaboradorId:
-            usuarioRole === "colaborador"
+            usuarioRole ===
+            "colaborador"
               ? usuarioColaboradorId
               : null,
         };
@@ -1038,7 +1082,7 @@ export default function ConfiguracoesPage() {
                   <RegraCard
                     icon={<Users size={19} />}
                     titulo="Comissão por assistência"
-                    descricao="Valor pago por cada cliente."
+                    descricao="Valor pago por cada assistência realizada."
                     unidade="R$"
                     valor={regras.assistenciaValorPorCliente}
                     moeda
@@ -1077,7 +1121,7 @@ export default function ConfiguracoesPage() {
                     valor={`R$ ${regras.assistenciaValorPorCliente.toLocaleString("pt-BR", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
-                    })} por cliente`}
+                    })} por assistência`}
                   />
                 </div>
               </section>
