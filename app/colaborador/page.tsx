@@ -30,6 +30,10 @@ import {
   Fechamento,
 } from "@/lib/fechamentos";
 import {
+  observarColaborador,
+  Colaborador,
+} from "@/lib/colaboradores";
+import {
   buscarRegrasComissao,
   regrasComissaoPadrao,
   RegrasComissao,
@@ -108,7 +112,7 @@ function calcularComissao(
     comissaoSeguroPrestamista;
 
   const comissaoAssistencia =
-    (resultado.quantidadeClientes || 0) *
+    (resultado.seguroAssistencia || 0) *
     regras.assistenciaValorPorCliente;
 
   const totalComissao =
@@ -116,9 +120,6 @@ function calcularComissao(
     comissaoReembolso +
     comissaoSeguro +
     comissaoAssistencia;
-
-    
-
   return {
     comissaoSeguroFinsol,
     comissaoSeguroPrestamista,
@@ -198,6 +199,9 @@ export default function ColaboradorPage() {
   const [perfil, setPerfil] =
     useState<UserProfile | null>(null);
 
+  const [colaborador, setColaborador] =
+    useState<Colaborador | null>(null);
+
   const [resultados, setResultados] =
     useState<Resultado[]>([]);
 
@@ -223,12 +227,13 @@ export default function ColaboradorPage() {
 const cancelarFechamentosRef =
   useRef<(() => void) | null>(null);
 
+const cancelarColaboradorRef =
+  useRef<(() => void) | null>(null);
   useEffect(() => {
     if (!menuUsuarioAberto) return;
-
     function fecharAoClicarFora(event: MouseEvent) {
-      const alvo = event.target as Node;
 
+      const alvo = event.target as Node;
       if (
         perfilMenuRef.current &&
         !perfilMenuRef.current.contains(alvo)
@@ -236,7 +241,6 @@ const cancelarFechamentosRef =
         setMenuUsuarioAberto(false);
       }
     }
-
     document.addEventListener(
       "mousedown",
       fecharAoClicarFora
@@ -258,7 +262,6 @@ const cancelarFechamentosRef =
         setMenuUsuarioAberto(false);
       }
     }
-
     document.addEventListener(
       "keydown",
       fecharComEscape
@@ -273,7 +276,7 @@ const cancelarFechamentosRef =
   }, [menuUsuarioAberto]);
 
   useEffect(() => {
-    
+
 
     const cancelarAuth =
       onAuthStateChanged(
@@ -286,7 +289,9 @@ const cancelarFechamentosRef =
           }
 
           try {
-            const perfilAtual =
+
+            const token = await auth.currentUser?.getIdTokenResult(true);
+const perfilAtual =
               await getUserProfile(
                 usuario.uid
               );
@@ -304,6 +309,14 @@ const cancelarFechamentosRef =
             }
 
             setPerfil(perfilAtual);
+
+            cancelarColaboradorRef.current =
+              observarColaborador(
+                perfilAtual.colaboradorId,
+                (dados) => {
+                  setColaborador(dados);
+                }
+              );
 
             // Os dados são filtrados imediatamente pelo
             // colaborador vinculado ao usuário.
@@ -351,9 +364,11 @@ cancelarFechamentosRef.current =
 
   cancelarResultadosRef.current?.();
   cancelarFechamentosRef.current?.();
+  cancelarColaboradorRef.current?.();
 
   cancelarResultadosRef.current = null;
   cancelarFechamentosRef.current = null;
+  cancelarColaboradorRef.current = null;
 };
   }, []);
 
@@ -488,6 +503,87 @@ cancelarFechamentosRef.current =
       regras,
     ]);
 
+
+  const metaMensal = Math.max(
+    Number(colaborador?.metaMensal || 0),
+    0
+  );
+
+  const percentualAtingimento =
+    metaMensal > 0
+      ? Math.min(
+          (resumo.producao / metaMensal) * 100,
+          100
+        )
+      : 0;
+
+  const percentualAtingimentoReal =
+    metaMensal > 0
+      ? (resumo.producao / metaMensal) * 100
+      : 0;
+
+  const faltaParaMeta =
+    Math.max(metaMensal - resumo.producao, 0);
+
+  const clientesNaCompetencia =
+    resultadosDaCompetencia.reduce(
+      (total, resultado) =>
+        total + (resultado.quantidadeClientes || 0),
+      0
+    );
+
+  const assistenciasNaCompetencia =
+    resultadosDaCompetencia.reduce(
+      (total, resultado) =>
+        total + (resultado.seguroAssistencia || 0),
+      0
+    );
+
+  const operacoesNaCompetencia =
+    resultadosDaCompetencia.length;
+
+  const evolucaoMensal = useMemo(() => {
+    const base = new Date(
+      competenciaSelecionada.getFullYear(),
+      competenciaSelecionada.getMonth(),
+      1
+    );
+
+    return Array.from({ length: 6 }, (_, indice) => {
+      const data = new Date(
+        base.getFullYear(),
+        base.getMonth() - (5 - indice),
+        1
+      );
+
+      const chave = obterChaveCompetencia(data);
+      const producao = resultados
+        .filter(
+          (resultado) =>
+            resultado.competencia === chave
+        )
+        .reduce(
+          (total, resultado) =>
+            total + (resultado.produtividade || 0),
+          0
+        );
+
+      return {
+        chave,
+        mes: data.toLocaleDateString("pt-BR", {
+          month: "short",
+        }).replace(".", ""),
+        producao,
+      };
+    });
+  }, [resultados, competenciaSelecionada]);
+
+  const maiorProducaoEvolucao = Math.max(
+    ...evolucaoMensal.map((item) => item.producao),
+    metaMensal,
+    1
+  );
+
   if (carregando) {
     return (
       <div className="space-y-6">
@@ -567,9 +663,11 @@ cancelarFechamentosRef.current =
     // Cancela os listeners do Firestore antes de remover a autenticação.
     cancelarResultadosRef.current?.();
     cancelarFechamentosRef.current?.();
+    cancelarColaboradorRef.current?.();
 
     cancelarResultadosRef.current = null;
     cancelarFechamentosRef.current = null;
+    cancelarColaboradorRef.current = null;
 
     await signOut(auth);
 
@@ -715,14 +813,14 @@ cancelarFechamentosRef.current =
         </div>
       </div>
 
-      {/* Resultados da competência */}
+      {/* Indicadores principais */}
       <section>
         <div className="mb-3">
-          <h2 className="text-sm font-semibold text-slate-100">
-            Resultados da competência
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            Meu desempenho
           </h2>
-          <p className="mt-1 text-[11px] text-slate-400">
-            Acompanhe sua produtividade e os resultados registrados no período.
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+            Acompanhe sua produção, meta e principais indicadores da competência.
           </p>
         </div>
 
@@ -735,53 +833,185 @@ cancelarFechamentosRef.current =
           />
 
           <ResumoCard
-            icon={<ShieldCheck size={18} />}
-            label="Seguro Finsol"
-            valor={formatarMoeda(
-              resultadosDaCompetencia.reduce(
-                (total, resultado) =>
-                  total + (resultado.seguroFinsol || 0),
-                0
-              )
-            )}
+            icon={<Wallet size={18} />}
+            label="Meta mensal"
+            valor={
+              metaMensal > 0
+                ? formatarMoeda(metaMensal)
+                : "Não definida"
+            }
             estilo="blue"
           />
 
           <ResumoCard
-            icon={<ShieldCheck size={18} />}
-            label="Seguro PRESTAMISTA"
-            valor={formatarMoeda(
-              resultadosDaCompetencia.reduce(
-                (total, resultado) =>
-                  total + (resultado.seguroPrestamista || 0),
-                0
-              )
-            )}
-            estilo="purple"
+            icon={<Users size={18} />}
+            label="Clientes"
+            valor={numeroInteiro(clientesNaCompetencia)}
+            estilo="green"
           />
 
           <ResumoCard
-            icon={<Users size={18} />}
-            label="Assistências"
-            valor={String(
-              resultadosDaCompetencia.reduce(
-                (total, resultado) =>
-                  total + (resultado.seguroAssistencia || 0),
-                0
-              )
-            )}
-            estilo="green"
+            icon={<FileText size={18} />}
+            label="Operações"
+            valor={numeroInteiro(operacoesNaCompetencia)}
+            estilo="purple"
           />
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1fr]">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  Atingimento da meta
+                </p>
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                  {metaMensal > 0
+                    ? `${formatarMoeda(resumo.producao)} de ${formatarMoeda(metaMensal)}`
+                    : "Cadastre uma meta mensal para acompanhar o atingimento."}
+                </p>
+              </div>
+
+              <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-[#ea580c] dark:bg-orange-950/50 dark:text-orange-300">
+                {metaMensal > 0
+                  ? `${percentualAtingimentoReal.toFixed(1)}%`
+                  : "—"}
+              </span>
+            </div>
+
+            <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+              <div
+                className="h-full rounded-full bg-[#f97316] transition-all"
+                style={{
+                  width: `${percentualAtingimento}%`,
+                }}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+              <span className="text-slate-500 dark:text-slate-400">
+                {metaMensal > 0
+                  ? faltaParaMeta > 0
+                    ? `Faltam ${formatarMoeda(faltaParaMeta)} para a meta`
+                    : "Meta atingida"
+                  : "Sem meta cadastrada"}
+              </span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">
+                Assistências: {assistenciasNaCompetencia}
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+              Indicadores de seguros
+            </p>
+
+            <div className="mt-4 space-y-3">
+              <IndicadorLinha
+                label="Seguro Finsol"
+                valor={formatarMoeda(
+                  resultadosDaCompetencia.reduce(
+                    (total, resultado) =>
+                      total + (resultado.seguroFinsol || 0),
+                    0
+                  )
+                )}
+              />
+
+              <IndicadorLinha
+                label="Seguro prestamista"
+                valor={formatarMoeda(
+                  resultadosDaCompetencia.reduce(
+                    (total, resultado) =>
+                      total + (resultado.seguroPrestamista || 0),
+                    0
+                  )
+                )}
+              />
+
+              <IndicadorLinha
+                label="Assistências"
+                valor={numeroInteiro(assistenciasNaCompetencia)}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Minha evolução */}
+      <section className="mt-5">
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            Minha evolução
+          </h2>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+            Comparativo da produtividade dos últimos seis meses.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex h-48 items-end gap-2 sm:gap-4">
+            {evolucaoMensal.map((item) => {
+              const altura =
+                maiorProducaoEvolucao > 0
+                  ? Math.max(
+                      (item.producao / maiorProducaoEvolucao) * 100,
+                      item.producao > 0 ? 6 : 0
+                    )
+                  : 0;
+
+              const selecionado =
+                item.chave === competenciaAtual;
+
+              return (
+                <div
+                  key={item.chave}
+                  className="flex min-w-0 flex-1 flex-col items-center justify-end gap-2"
+                >
+                  <span className="truncate text-[9px] font-semibold text-slate-500 dark:text-slate-400">
+                    {item.producao > 0
+                      ? formatarMoeda(item.producao)
+                      : "—"}
+                  </span>
+
+                  <div className="flex h-32 w-full items-end justify-center rounded-lg bg-slate-50 px-1 dark:bg-slate-900">
+                    <div
+                      className={`w-full max-w-12 rounded-t-lg transition-all ${
+                        selecionado
+                          ? "bg-[#f97316]"
+                          : "bg-slate-300 dark:bg-slate-700"
+                      }`}
+                      style={{
+                        height: `${altura}%`,
+                      }}
+                      title={`${item.mes}: ${formatarMoeda(item.producao)}`}
+                    />
+                  </div>
+
+                  <span
+                    className={`text-[10px] font-semibold ${
+                      selecionado
+                        ? "text-[#ea580c]"
+                        : "text-slate-400 dark:text-slate-500"
+                    }`}
+                  >
+                    {item.mes}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
       {/* Minha remuneração */}
       <section className="mt-5">
         <div className="mb-3">
-          <h2 className="text-sm font-semibold text-slate-100">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             Minha remuneração
           </h2>
-          <p className="mt-1 text-[11px] text-slate-400">
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
             Valores calculados de acordo com os resultados e as regras vigentes.
           </p>
         </div>
@@ -1038,7 +1268,30 @@ cancelarFechamentosRef.current =
         )}
       </section>
       </div>
-    
+
+  );
+}
+
+function numeroInteiro(valor: number) {
+  return new Intl.NumberFormat("pt-BR").format(valor);
+}
+
+function IndicadorLinha({
+  label,
+  valor,
+}: {
+  label: string;
+  valor: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-3 dark:bg-slate-900">
+      <span className="text-xs text-slate-500 dark:text-slate-400">
+        {label}
+      </span>
+      <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+        {valor}
+      </span>
+    </div>
   );
 }
 

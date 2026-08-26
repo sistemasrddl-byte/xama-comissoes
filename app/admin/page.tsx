@@ -36,6 +36,10 @@ function numero(valor: number) {
   return valor.toLocaleString("pt-BR");
 }
 
+function primeiroNome(nome: string) {
+  return nome.trim().split(/\s+/)[0] || nome;
+}
+
 function formatarCompetencia(valor: string) {
   if (!valor) return "";
 
@@ -664,25 +668,16 @@ export default function AdminPage() {
                           >
                             <td className="p-0">
                               <div
-                                className={`flex min-h-[58px] items-center gap-2.5 px-3 py-2.5 text-white ${
+                                className={`flex min-h-[58px] items-center justify-center px-3 py-2.5 text-center text-white ${
                                   coresOperador[
                                     index %
                                       coresOperador.length
                                   ]
                                 }`}
                               >
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20">
-                                  <UserRound size={16} />
-                                </div>
-
-                                <div className="min-w-0">
-                                  <p className="truncate text-[12px] font-bold">
-                                    {item.nome}
-                                  </p>
-                                  <p className="text-[9px] text-white/80">
-                                    {item.resultados} resultado(s)
-                                  </p>
-                                </div>
+                                <p className="truncate text-center text-[12px] font-bold">
+                                  {primeiroNome(item.nome)}
+                                </p>
                               </div>
                             </td>
 
@@ -726,7 +721,7 @@ export default function AdminPage() {
                       )}
 
                       <tr className="bg-[#121a45] text-white">
-                        <td className="px-3 py-4 text-left text-[12px] font-extrabold uppercase leading-4">
+                        <td className="px-3 py-4 text-center text-[12px] font-extrabold uppercase leading-4">
                           TOTAL DA<br />AGÊNCIA
                         </td>
 
@@ -786,7 +781,7 @@ export default function AdminPage() {
 
                             <div className="min-w-0">
                               <p className="truncate text-sm font-bold text-slate-900">
-                                {item.nome}
+                                {primeiroNome(item.nome)}
                               </p>
                               <p className="mt-0.5 text-[10px] text-slate-400">
                                 {item.resultados} resultado(s)

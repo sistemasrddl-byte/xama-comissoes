@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+
 import {
   Calculator,
   CheckCircle2,
@@ -13,7 +14,6 @@ import {
   Save,
   ShieldCheck,
   Sun,
-  Trash2,
   UserPlus,
   Users,
   Wallet,
@@ -28,25 +28,22 @@ import {
 
 import {
   collection,
-  deleteDoc,
-  doc,
   getDocs,
   orderBy,
   query,
   where,
-  setDoc,
-  updateDoc,
 } from "firebase/firestore";
-import {
-  createUserWithEmailAndPassword,
-  getAuth,
-  onAuthStateChanged,
-  signOut,
-} from "firebase/auth";
-import { getApps, initializeApp } from "firebase/app";
+
+import { onAuthStateChanged } from "firebase/auth";
 
 import { auth, db } from "@/lib/firebase";
 import { getUserProfile } from "@/lib/user";
+
+import {
+  criarUsuarioAdmin,
+  atualizarUsuarioAdmin,
+  atualizarStatusUsuarioAdmin,
+} from "./actions";
 
 function formatarMoedaInput(valor: number) {
   return valor.toLocaleString("pt-BR", {
@@ -70,107 +67,6 @@ type ColaboradorOpcao = {
   nome: string;
 };
 
-
-function criarAuthSecundario() {
-  const config = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  };
-
-  const nomeApp = "xama-admin-user-creator";
-  const appExistente = getApps().find(
-    (app) => app.name === nomeApp
-  );
-
-  const app =
-    appExistente ??
-    initializeApp(config, nomeApp);
-
-  return getAuth(app);
-}
-
-
-const FRASES_MOTIVACIONAIS = [
-  "Grandes resultados começam com pequenas atitudes.",
-  "Seu esforço de hoje constrói o resultado de amanhã.",
-  "Foco no processo, excelência no resultado.",
-  "Cada desafio é uma oportunidade para evoluir.",
-  "Resultados consistentes são construídos todos os dias.",
-  "A dedicação transforma metas em conquistas.",
-  "Faça o seu melhor hoje e deixe o resultado falar por você.",
-  "Quem trabalha com propósito transforma esforço em resultado.",
-  "Disciplina hoje, resultados amanhã.",
-  "Toda conquista começa com a decisão de tentar.",
-  "A constância é uma das maiores forças de quem alcança grandes objetivos.",
-  "Um passo de cada vez também leva longe.",
-  "Seu trabalho tem valor. Continue avançando.",
-  "Metas claras, atitude firme e dedicação diária.",
-  "O resultado é consequência de boas escolhas repetidas todos os dias.",
-  "Não espere o momento perfeito. Faça o melhor com o momento que você tem.",
-  "Persistência transforma obstáculos em experiência.",
-  "Cada dia é uma nova oportunidade para fazer melhor.",
-  "A evolução acontece quando você decide não parar.",
-  "Quem mantém o foco encontra caminhos onde outros veem dificuldades.",
-  "Pequenos avanços acumulados produzem grandes mudanças.",
-  "Seu compromisso com o trabalho faz a diferença.",
-  "Excelência não é um ato isolado, é um hábito.",
-  "Acredite no seu potencial e coloque sua energia em ação.",
-  "O sucesso é construído com planejamento, dedicação e consistência.",
-  "Quando existe propósito, até os desafios ganham sentido.",
-  "Faça hoje aquilo que aproximará você da sua melhor versão.",
-  "A qualidade do seu trabalho começa na qualidade da sua atitude.",
-  "Não compare seu começo com o resultado de outra pessoa. Continue evoluindo.",
-  "Toda meta alcançada um dia foi apenas um objetivo.",
-  "O trabalho bem feito sempre deixa uma marca.",
-  "Confie no processo e mantenha o foco no que depende de você.",
-  "A melhor maneira de prever bons resultados é trabalhar para construí-los.",
-  "Seu desempenho de hoje prepara as oportunidades de amanhã.",
-  "Desafios não definem você; a forma como você os enfrenta, sim.",
-  "A determinação transforma intenção em realização.",
-  "Cada resultado positivo começa com uma atitude positiva.",
-  "Quando você melhora um pouco todos os dias, o resultado aparece.",
-  "Não desista por causa de um dia difícil. Recomece e continue.",
-  "Organização, foco e constância fazem grandes objetivos parecerem possíveis.",
-  "Seu trabalho diário pode ser o motivo de uma grande conquista.",
-  "A força de uma equipe está na dedicação de cada pessoa.",
-  "Valorize cada progresso, mesmo aquele que parece pequeno.",
-  "Resultados extraordinários nascem de esforços comuns feitos com consistência.",
-  "Mantenha os olhos na meta e os pés no caminho.",
-  "Você não precisa fazer tudo de uma vez; precisa continuar avançando.",
-  "Atitude transforma possibilidades em resultados.",
-  "O melhor resultado é aquele construído com responsabilidade e propósito.",
-  "Hoje é um excelente dia para dar mais um passo rumo ao seu objetivo.",
-] as const;
-
-function fraseDoDia(
-  perfil: "admin" | "colaborador" | string | undefined = "admin"
-) {
-  const inicioDoAno = new Date(
-    new Date().getFullYear(),
-    0,
-    0
-  );
-  const hoje = new Date();
-  const diferenca =
-    hoje.getTime() - inicioDoAno.getTime();
-  const diaDoAno = Math.floor(
-    diferenca / 86400000
-  );
-
-  // Usa o perfil como deslocamento para que administrador
-  // e colaborador não recebam necessariamente a mesma frase.
-  const deslocamento =
-    perfil === "colaborador" ? 17 : 0;
-
-  return FRASES_MOTIVACIONAIS[
-    (diaDoAno + deslocamento) %
-      FRASES_MOTIVACIONAIS.length
-  ];
-}
 
 export default function ConfiguracoesPage() {
   const [regras, setRegras] =
@@ -226,16 +122,10 @@ export default function ConfiguracoesPage() {
     useState(true);
   const [mostrarSenha, setMostrarSenha] =
     useState(false);
-
-
   const [tema, setTema] =
     useState<"claro" | "escuro">("claro");
-
   const [salvandoUsuario, setSalvandoUsuario] =
     useState(false);
-  const [salvandoFrase, setSalvandoFrase] =
-    useState(false);
-
   useEffect(() => {
     let cancelado = false;
 
@@ -277,92 +167,88 @@ export default function ConfiguracoesPage() {
   useEffect(() => {
     let cancelado = false;
     let cancelarAuth: (() => void) | undefined;
-
     async function carregarDadosConfiguracoes(
       usuarioAtual: typeof auth.currentUser
     ) {
       try {
-        if (usuarioAtual) {
-          let perfil =
-            await getUserProfile(usuarioAtual.uid);
-
-          // O perfil do usuário é carregado pelo UID.
-          // Se ainda não estiver disponível nessa estrutura,
-          // fazemos fallback pelo e-mail, que é único no login.
-          if (!perfil && usuarioAtual.email) {
-            const perfilPorEmail = await getDocs(
-              query(
-                collection(db, "users"),
-                where(
-                  "email",
-                  "==",
-                  usuarioAtual.email.toLowerCase()
-                )
-              )
-            );
-
-            const encontrado =
-              perfilPorEmail.docs[0];
-
-            if (encontrado) {
-              const dados =
-                encontrado.data();
-
-              perfil = {
-                nome:
-                  String(
-                    dados.nome ??
-                      usuarioAtual.displayName ??
-                      "Usuário"
-                  ),
-                email:
-                  String(
-                    dados.email ??
-                      usuarioAtual.email
-                  ),
-                role:
-                  dados.role === "admin"
-                    ? "admin"
-                    : "colaborador",
-                ativo:
-                  dados.ativo !== false,
-                colaboradorId:
-                  dados.colaboradorId ??
-                  null,
-              };
-            }
-          }
-
-          if (!cancelado && perfil) {
-            setPerfilAtual({
-              nome: perfil.nome,
-              email:
-                perfil.email ||
-                usuarioAtual.email ||
-                "",
-              role: perfil.role,
-              colaboradorId:
-                perfil.colaboradorId ??
-                null,
-            });
-          }
+        if (!usuarioAtual) {
+          setPerfilAtual(null);
+          return;
         }
 
-        const [usuariosSnap, colaboradoresSnap] =
-          await Promise.all([
-            getDocs(
-              query(
-                collection(db, "users"),
-                orderBy("nome")
+        let perfil =
+          await getUserProfile(usuarioAtual.uid);
+        // O perfil do usuário é carregado pelo UID.
+        // Se ainda não estiver disponível nessa estrutura,
+        // fazemos fallback pelo e-mail, que é único no login.
+        if (!perfil && usuarioAtual.email) {
+          const perfilPorEmail = await getDocs(
+            query(
+              collection(db, "users"),
+              where(
+                "email",
+                "==",
+                usuarioAtual.email.toLowerCase()
               )
-            ),
-            getDocs(
-              query(
-                collection(db, "colaboradores"),
-                orderBy("nome")
-              )
-            ),
-          ]);
+            )
+          );
+          const encontrado =
+            perfilPorEmail.docs[0];
+          if (encontrado) {
+            const dados =
+              encontrado.data();
+            perfil = {
+              nome: String(
+                dados.nome ??
+                  usuarioAtual.displayName ??
+                  "Usuário"
+              ),
+              email: String(
+                dados.email ??
+                  usuarioAtual.email
+              ),
+              role:
+                dados.role === "admin"
+                  ? "admin"
+                  : "colaborador",
+              ativo:
+                dados.ativo !== false,
+              colaboradorId:
+                dados.colaboradorId ??
+                null,
+            };
+          }
+        }
+        if (!cancelado && perfil) {
+          setPerfilAtual({
+            nome: perfil.nome,
+            email:
+              perfil.email ||
+              usuarioAtual.email ||
+              "",
+            role: perfil.role,
+            colaboradorId:
+              perfil.colaboradorId ??
+              null,
+          });
+        }
+        const [
+          usuariosSnap,
+          colaboradoresSnap,
+        ] = await Promise.all([
+          getDocs(
+            query(
+              collection(db, "users"),
+              orderBy("nome")
+            )
+          ),
+          getDocs(
+            query(
+              collection(db, "colaboradores"),
+              orderBy("nome")
+            )
+          ),
+        ]);
 
         if (cancelado) return;
 
@@ -379,10 +265,9 @@ export default function ConfiguracoesPage() {
         setColaboradores(
           colaboradoresSnap.docs.map((item) => ({
             id: item.id,
-            nome:
-              String(
-                item.data().nome ?? ""
-              ),
+            nome: String(
+              item.data().nome ?? ""
+            ),
           }))
         );
       } catch (error) {
@@ -537,70 +422,34 @@ export default function ConfiguracoesPage() {
       setMensagem("");
 
       if (editandoUsuario) {
-        await updateDoc(
-          doc(
-            db,
-            "users",
-            editandoUsuario.id
-          ),
-          {
-            nome: usuarioNome.trim(),
-            email:
-              usuarioEmail.trim().toLowerCase(),
-            role: usuarioRole,
-            ativo: usuarioAtivo,
-            colaboradorId:
-              usuarioRole === "colaborador"
-                ? usuarioColaboradorId
-                : null,
-          }
-        );
+  const usuarioAtual = auth.currentUser;
 
-        setUsuarios((anterior) =>
-          anterior.map((item) =>
-            item.id === editandoUsuario.id
-              ? {
-                  ...item,
-                  nome: usuarioNome.trim(),
-                  email:
-                    usuarioEmail
-                      .trim()
-                      .toLowerCase(),
-                  role: usuarioRole,
-                  ativo: usuarioAtivo,
-                  colaboradorId:
-                    usuarioRole ===
-                    "colaborador"
-                      ? usuarioColaboradorId
-                      : null,
-                }
-              : item
-          )
-        );
+  if (!usuarioAtual) {
+    throw new Error(
+      "Usuário administrador não autenticado."
+    );
+  }
 
-        setMensagem(
-          "Usuário atualizado com sucesso."
-        );
-      } else {
-        const authSecundario =
-          criarAuthSecundario();
+  const idToken =
+    await usuarioAtual.getIdToken(true);
 
-        const credencial =
-          await createUserWithEmailAndPassword(
-            authSecundario,
-            usuarioEmail
-              .trim()
-              .toLowerCase(),
-            usuarioSenha
-          );
-
-        await setDoc(
-          doc(
-            db,
-            "users",
-            credencial.user.uid
-          ),
-          {
+  await atualizarUsuarioAdmin({
+    uid: editandoUsuario.id,
+    nome: usuarioNome.trim(),
+    email: usuarioEmail.trim().toLowerCase(),
+    role: usuarioRole,
+    ativo: usuarioAtivo,
+    colaboradorId:
+      usuarioRole === "colaborador"
+        ? usuarioColaboradorId
+        : null,
+    idToken,
+  });
+  setUsuarios((anterior) =>
+    anterior.map((item) =>
+      item.id === editandoUsuario.id
+        ? {
+            ...item,
             nome: usuarioNome.trim(),
             email:
               usuarioEmail
@@ -609,47 +458,68 @@ export default function ConfiguracoesPage() {
             role: usuarioRole,
             ativo: usuarioAtivo,
             colaboradorId:
-              usuarioRole ===
-              "colaborador"
+              usuarioRole === "colaborador"
                 ? usuarioColaboradorId
                 : null,
-            criadoEm:
-              new Date().toISOString(),
           }
-        );
+        : item
+    )
+  );
+  setMensagem(
+    "Usuário atualizado com sucesso."
+  );
+} else {
+  const usuarioAtual = auth.currentUser;
 
-        await signOut(authSecundario);
+  if (!usuarioAtual) {
+    throw new Error(
+      "Usuário administrador não autenticado."
+    );
+  }
 
-        const novo: UsuarioSistema = {
-          id: credencial.user.uid,
-          nome: usuarioNome.trim(),
-          email:
-            usuarioEmail
-              .trim()
-              .toLowerCase(),
-          role: usuarioRole,
-          ativo: usuarioAtivo,
-          colaboradorId:
-            usuarioRole ===
-            "colaborador"
-              ? usuarioColaboradorId
-              : null,
-        };
+  const idToken =
+    await usuarioAtual.getIdToken(true);
 
-        setUsuarios((anterior) =>
-          [...anterior, novo].sort(
-            (a, b) =>
-              a.nome.localeCompare(
-                b.nome,
-                "pt-BR"
-              )
-          )
-        );
+  const resultado =
+    await criarUsuarioAdmin({
+      nome: usuarioNome.trim(),
+      email:
+        usuarioEmail.trim().toLowerCase(),
+      senha: usuarioSenha,
+      role: usuarioRole,
+      ativo: usuarioAtivo,
+      colaboradorId:
+        usuarioRole === "colaborador"
+          ? usuarioColaboradorId
+          : null,
+      idToken,
+    });
 
-        setMensagem(
-          "Usuário criado com sucesso."
-        );
-      }
+  const novo: UsuarioSistema = {
+    id: resultado.uid,
+    nome: usuarioNome.trim(),
+    email:
+      usuarioEmail.trim().toLowerCase(),
+    role: usuarioRole,
+    ativo: usuarioAtivo,
+    colaboradorId:
+      usuarioRole === "colaborador"
+        ? usuarioColaboradorId
+        : null,
+  };
+  setUsuarios((anterior) =>
+    [...anterior, novo].sort(
+      (a, b) =>
+        a.nome.localeCompare(
+          b.nome,
+          "pt-BR"
+        )
+    )
+  );
+  setMensagem(
+    "Usuário criado com sucesso."
+  );
+}
 
       setUsuarioModal(false);
     } catch (error: any) {
@@ -690,36 +560,57 @@ export default function ConfiguracoesPage() {
   }
 
   async function alternarUsuario(
-    usuario: UsuarioSistema
-  ) {
-    try {
-      await updateDoc(
-        doc(db, "users", usuario.id),
-        {
-          ativo: !usuario.ativo,
-        }
-      );
+  usuario: UsuarioSistema
+) {
+  try {
+    setErro("");
+    setMensagem("");
 
-      setUsuarios((anterior) =>
-        anterior.map((item) =>
-          item.id === usuario.id
-            ? {
-                ...item,
-                ativo: !item.ativo,
-              }
-            : item
-        )
-      );
-    } catch (error) {
-      console.error(
-        "Erro ao alterar usuário:",
-        error
-      );
-      setErro(
-        "Não foi possível alterar a situação do usuário."
+    const usuarioAtual = auth.currentUser;
+
+    if (!usuarioAtual) {
+      throw new Error(
+        "Usuário administrador não autenticado."
       );
     }
+
+    const novoStatus = !usuario.ativo;
+
+    const idToken =
+      await usuarioAtual.getIdToken(true);
+
+    await atualizarStatusUsuarioAdmin({
+      uid: usuario.id,
+      ativo: novoStatus,
+      idToken,
+    });
+    setUsuarios((anterior) =>
+      anterior.map((item) =>
+        item.id === usuario.id
+          ? {
+              ...item,
+              ativo: novoStatus,
+            }
+          : item
+      )
+    );
+
+    setMensagem(
+      novoStatus
+        ? "Usuário ativado com sucesso."
+        : "Usuário desativado com sucesso."
+    );
+  } catch (error) {
+    console.error(
+      "Erro ao alterar usuário:",
+      error
+    );
+
+    setErro(
+      "Não foi possível alterar a situação do usuário."
+    );
   }
+}
 
 
   async function salvar(
